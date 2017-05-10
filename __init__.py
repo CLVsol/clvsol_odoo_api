@@ -19,5 +19,7 @@
 #
 ###############################################################################
 
+from res_partner import *
+
 from clv_global_tag import *
 from clv_mfile import *
