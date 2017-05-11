@@ -85,6 +85,54 @@ def hr_department_export_sqlite(client, args, db_path, table_name):
     print()
 
 
+def hr_job_export_sqlite(client, args, db_path, table_name):
+
+    conn = sqlite3.connect(db_path)
+    conn.text_factory = str
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''DROP TABLE ''' + table_name + ''';''')
+    except Exception as e:
+        print('------->', e)
+    cursor.execute(
+        '''
+        CREATE TABLE ''' + table_name + ''' (
+            id INTEGER NOT NULL PRIMARY KEY,
+            name,
+            new_id INTEGER
+            );
+        '''
+    )
+
+    job_model = client.model('hr.job')
+    job_browse = job_model.browse(args)
+
+    job_count = 0
+    for job_reg in job_browse:
+        job_count += 1
+
+        print(job_count, job_reg.id, job_reg.name.encode("utf-8"))
+
+        cursor.execute('''
+            INSERT INTO ''' + table_name + '''(
+                id,
+                name
+                )
+            VALUES(?,?)
+            ''', (job_reg.id,
+                  job_reg.name,
+                  )
+        )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> job_count: ', job_count)
+    print()
+
+
 def hr_department_import_sqlite(client, args, db_path, table_name):
 
     hr_department_model = client.model('hr.department')
