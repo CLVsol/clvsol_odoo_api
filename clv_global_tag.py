@@ -24,6 +24,78 @@ from __future__ import print_function
 import sqlite3
 
 
+def myo_tag_export_sqlite(client, args, db_path, table_name):
+
+    conn = sqlite3.connect(db_path)
+    conn.text_factory = str
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''DROP TABLE ''' + table_name + ''';''')
+    except Exception as e:
+        print('------->', e)
+    cursor.execute('''
+        CREATE TABLE ''' + table_name + ''' (
+            id INTEGER NOT NULL PRIMARY KEY,
+            parent_id,
+            name,
+            code,
+            description,
+            notes,
+            color,
+            new_id INTEGER
+            );
+    ''')
+
+    myo_tag = client.model('myo.tag')
+    tag_browse = myo_tag.browse(args)
+
+    tag_count = 0
+    for tag in tag_browse:
+        tag_count += 1
+
+        print(tag_count, tag.id, tag.code, tag.name.encode("utf-8"), tag.notes)
+
+        parent_id = None
+        if tag.parent_id:
+            parent_id = tag.parent_id.id
+
+        notes = None
+        if tag.notes:
+            notes = tag.notes
+
+        color = None
+        if tag.color:
+            color = tag.color
+
+        cursor.execute('''
+                       INSERT INTO ''' + table_name + '''(
+                           id,
+                           parent_id,
+                           name,
+                           code,
+                           description,
+                           notes,
+                           color
+                           )
+                       VALUES(?,?,?,?,?,?,?)''',
+                       (tag.id,
+                        parent_id,
+                        tag.name,
+                        tag.code,
+                        tag.description,
+                        notes,
+                        color
+                        )
+                       )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> tag_count: ', tag_count)
+
+
 def clv_tag_export_sqlite(client, args, db_path, table_name):
 
     conn = sqlite3.connect(db_path)
