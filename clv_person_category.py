@@ -24,7 +24,7 @@ from __future__ import print_function
 import sqlite3
 
 
-def myo_tag_export_sqlite(client, args, db_path, table_name):
+def myo_person_category_export_sqlite(client, args, db_path, table_name):
 
     conn = sqlite3.connect(db_path)
     conn.text_factory = str
@@ -47,26 +47,29 @@ def myo_tag_export_sqlite(client, args, db_path, table_name):
             );
     ''')
 
-    myo_tag = client.model('myo.tag')
-    tag_browse = myo_tag.browse(args)
+    myo_person_category = client.model('myo.person.category')
+    person_category_browse = myo_person_category.browse(args)
 
-    tag_count = 0
-    for tag in tag_browse:
-        tag_count += 1
+    person_category_count = 0
+    for person_category in person_category_browse:
+        person_category_count += 1
 
-        print(tag_count, tag.id, tag.code, tag.name.encode("utf-8"), tag.notes)
+        print(
+            person_category_count, person_category.id, person_category.code,
+            person_category.name.encode("utf-8"), person_category.notes
+        )
 
         parent_id = None
-        if tag.parent_id:
-            parent_id = tag.parent_id.id
+        if person_category.parent_id:
+            parent_id = person_category.parent_id.id
 
         notes = None
-        if tag.notes:
-            notes = tag.notes
+        if person_category.notes:
+            notes = person_category.notes
 
         color = None
-        if tag.color:
-            color = tag.color
+        if person_category.color:
+            color = person_category.color
 
         cursor.execute('''
                        INSERT INTO ''' + table_name + '''(
@@ -79,11 +82,11 @@ def myo_tag_export_sqlite(client, args, db_path, table_name):
                            color
                            )
                        VALUES(?,?,?,?,?,?,?)''',
-                       (tag.id,
+                       (person_category.id,
                         parent_id,
-                        tag.name,
-                        tag.code,
-                        tag.description,
+                        person_category.name,
+                        person_category.code,
+                        person_category.description,
                         notes,
                         color
                         )
@@ -93,68 +96,12 @@ def myo_tag_export_sqlite(client, args, db_path, table_name):
     conn.close()
 
     print()
-    print('--> tag_count: ', tag_count)
+    print('--> person_category_count: ', person_category_count)
 
 
-def clv_tag_export_sqlite(client, args, db_path, table_name):
+def person_category_import_sqlite(client, args, db_path, table_name):
 
-    conn = sqlite3.connect(db_path)
-    conn.text_factory = str
-
-    cursor = conn.cursor()
-    try:
-        cursor.execute('''DROP TABLE ''' + table_name + ''';''')
-    except Exception as e:
-        print('------->', e)
-    cursor.execute('''
-        CREATE TABLE ''' + table_name + ''' (
-            id INTEGER NOT NULL PRIMARY KEY,
-            parent_id,
-            name,
-            code,
-            description,
-            notes TEXT,
-            color,
-            new_id INTEGER
-            );
-    ''')
-
-    clv_tag = client.model('clv_tag')
-    tag_browse = clv_tag.browse(args)
-
-    tag_count = 0
-    for tag in tag_browse:
-        tag_count += 1
-
-        print(tag_count, tag.id, tag.code, tag.name.encode("utf-8"), tag.notes)
-
-        cursor.execute('''
-                       INSERT INTO ''' + table_name + '''(
-                           id,
-                           name,
-                           code,
-                           description,
-                           notes
-                           )
-                       VALUES(?,?,?,?,?)''',
-                       (tag.id,
-                        tag.name,
-                        tag.code,
-                        tag.description,
-                        tag.notes
-                        )
-                       )
-
-    conn.commit()
-    conn.close()
-
-    print()
-    print('--> tag_count: ', tag_count)
-
-
-def clv_global_tag_import_sqlite(client, args, db_path, table_name):
-
-    global_tag_model = client.model('clv.global_tag')
+    person_category_model = client.model('myo.person.category')
 
     conn = sqlite3.connect(db_path)
     # conn.text_factory = str
@@ -180,30 +127,30 @@ def clv_global_tag_import_sqlite(client, args, db_path, table_name):
     print(data)
     print([field[0] for field in cursor.description])
 
-    tag_count = 0
+    person_category_count = 0
     for row in cursor:
-        tag_count += 1
+        person_category_count += 1
 
         print(
-            tag_count, row['id'], row['parent_id'], row['name'], row['code'],
+            person_category_count, row['id'], row['parent_id'], row['name'], row['code'],
             row['description'], row['notes'], row['color']
         )
 
         values = {
             'name': row['name'],
-            # 'code': row['code'],
+            'code': row['code'],
             'description': row['description'],
             'notes': row['notes'],
             'color': row['color'],
         }
-        tag_id = global_tag_model.create(values).id
+        person_category_id = person_category_model.create(values).id
 
         cursor2.execute(
             '''
             UPDATE ''' + table_name + '''
             SET new_id = ?
             WHERE id = ?;''',
-            (tag_id,
+            (person_category_id,
              row['id']
              )
         )
@@ -224,11 +171,11 @@ def clv_global_tag_import_sqlite(client, args, db_path, table_name):
         WHERE parent_id IS NOT NULL;
     ''')
 
-    tag_count_2 = 0
+    person_category_count_2 = 0
     for row in cursor:
-        tag_count_2 += 1
+        person_category_count_2 += 1
 
-        print(tag_count_2, row['id'], row['parent_id'], row['name'], row['code'], row['new_id'])
+        print(person_category_count_2, row['id'], row['parent_id'], row['name'], row['code'], row['new_id'])
 
         cursor2.execute(
             '''
@@ -245,11 +192,11 @@ def clv_global_tag_import_sqlite(client, args, db_path, table_name):
         values = {
             'parent_id': new_parent_id,
         }
-        global_tag_model.write(row['new_id'], values)
+        person_category_model.write(row['new_id'], values)
 
     conn.commit()
     conn.close()
 
     print()
-    print('--> tag_count: ', tag_count)
-    print('--> tag_count_2: ', tag_count_2)
+    print('--> person_category_count: ', person_category_count)
+    print('--> person_category_count_2: ', person_category_count_2)
