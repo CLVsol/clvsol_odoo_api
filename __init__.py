@@ -22,6 +22,7 @@
 from res_partner import *
 from res_users import *
 
+from clv_address_category import *
 from clv_employee import *
 from clv_global_tag import *
 from clv_mfile import *
