@@ -152,7 +152,7 @@ def res_partner_import_sqlite(client, args, db_path, table_name):
         res_partner_count += 1
 
         print(
-            res_partner_count, row['id'], row['name'], row['email'],
+            res_partner_count, row['id'], row['name'].encode('utf-8'), row['email'],
         )
 
         res_partner_browse = res_partner_model.browse([('name', '=', row['name']), ])

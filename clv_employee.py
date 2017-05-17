@@ -189,6 +189,62 @@ def hr_department_import_sqlite(client, args, db_path, table_name):
     print('--> hr_department_count: ', hr_department_count)
 
 
+def hr_job_import_sqlite(client, args, db_path, table_name):
+
+    hr_job_model = client.model('hr.job')
+
+    conn = sqlite3.connect(db_path)
+    # conn.text_factory = str
+    conn.row_factory = sqlite3.Row
+
+    cursor = conn.cursor()
+
+    cursor2 = conn.cursor()
+
+    data = cursor.execute('''
+        SELECT
+            id,
+            name,
+            new_id
+        FROM ''' + table_name + ''';
+    ''')
+
+    print(data)
+    print([field[0] for field in cursor.description])
+
+    hr_job_count = 0
+    for row in cursor:
+        hr_job_count += 1
+
+        print(
+            hr_job_count, row['id'], row['name'].encode('utf-8'),
+        )
+
+        hr_job_browse = hr_job_model.browse([('name', '=', row['name']), ])
+        if hr_job_browse.id == []:
+
+            values = {
+                'name': row['name'],
+            }
+            hr_job_id = hr_job_model.create(values).id
+
+            cursor2.execute(
+                '''
+                UPDATE ''' + table_name + '''
+                SET new_id = ?
+                WHERE id = ?;''',
+                (hr_job_id,
+                 row['id']
+                 )
+            )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> hr_job_count: ', hr_job_count)
+
+
 def employee_create_from_user(client, user_login, job_title, department_name):
 
     print('Configuring employee "' + user_login + '"...')
@@ -332,7 +388,8 @@ def hr_employee_export_sqlite(client, args, db_path, table_name):
 
 
 def hr_employee_import_sqlite(
-    client, args, db_path, table_name, hr_department_table_name, res_partner_table_name, res_users_table_name
+    client, args, db_path, table_name, hr_department_table_name, hr_job_table_name,
+    res_partner_table_name, res_users_table_name
 ):
 
     hr_employee_model = client.model('hr.employee')
@@ -369,7 +426,7 @@ def hr_employee_import_sqlite(
         hr_employee_count += 1
 
         print(
-            hr_employee_count, row['id'], row['name'], row['code'],
+            hr_employee_count, row['id'], row['name'].encode('utf-8'), row['code'],
         )
 
         hr_employee_browse = hr_employee_model.browse([('name', '=', row['name']), ])
@@ -387,6 +444,19 @@ def hr_employee_import_sqlite(
                      )
                 )
                 new_department_id = cursor2.fetchone()[0]
+
+            job_id = row['job_id']
+            new_job_id = False
+            if job_id is not None:
+                cursor2.execute(
+                    '''
+                    SELECT new_id
+                    FROM ''' + hr_job_table_name + '''
+                    WHERE id = ?;''',
+                    (job_id,
+                     )
+                )
+                new_job_id = cursor2.fetchone()[0]
 
             address_id = row['address_id']
             new_address_id = False
@@ -419,7 +489,7 @@ def hr_employee_import_sqlite(
                 'code': row['code'],
                 'address_id': new_address_id,
                 'work_email': row['work_email'],
-                'job_id': row['job_id'],
+                'job_id': new_job_id,
                 'department_id': new_department_id,
                 'user_id': new_user_id,
                 'image': row['image'],

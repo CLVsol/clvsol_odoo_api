@@ -200,7 +200,7 @@ def res_users_import_sqlite(client, args, db_path, table_name):
         res_users_count += 1
 
         print(
-            res_users_count, row['id'], row['name'], row['login'],
+            res_users_count, row['id'], row['name'].encode('utf-8'), row['login'],
         )
 
         res_users_browse = res_users_model.browse([('name', '=', row['name']), ])
@@ -227,30 +227,30 @@ def res_users_import_sqlite(client, args, db_path, table_name):
                  )
             )
 
-            if row['groups_id'] != '[]':
+            # if row['groups_id'] != '[]':
 
-                groups_id = row['groups_id'].split(',')
-                new_groups_id = []
-                for x in range(0, len(groups_id)):
-                    group_id = int(re.sub('[^0-9]', '', groups_id[x]))
-                    # cursor2.execute(
-                    #     '''
-                    #     SELECT new_id
-                    #     FROM ''' + group_table_name + '''
-                    #     WHERE id = ?;''',
-                    #     (group_id,
-                    #      )
-                    # )
-                    # new_group_id = cursor2.fetchone()[0]
+            #     groups_id = row['groups_id'].split(',')
+            #     new_groups_id = []
+            #     for x in range(0, len(groups_id)):
+            #         group_id = int(re.sub('[^0-9]', '', groups_id[x]))
+            #         # cursor2.execute(
+            #         #     '''
+            #         #     SELECT new_id
+            #         #     FROM ''' + group_table_name + '''
+            #         #     WHERE id = ?;''',
+            #         #     (group_id,
+            #         #      )
+            #         # )
+            #         # new_group_id = cursor2.fetchone()[0]
 
-                    values = {
-                        'groups_id': [(4, group_id)],
-                    }
-                    res_users_model.write(res_users_id, values)
+            #         values = {
+            #             'groups_id': [(4, group_id)],
+            #         }
+            #         res_users_model.write(res_users_id, values)
 
-                    new_groups_id.append(group_id)
+            #         new_groups_id.append(group_id)
 
-                print('>>>>>', row[4], new_groups_id)
+            #     print('>>>>>', row[4], new_groups_id)
 
     conn.commit()
     conn.close()
