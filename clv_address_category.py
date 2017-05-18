@@ -99,9 +99,9 @@ def myo_address_category_export_sqlite(client, args, db_path, table_name):
     print('--> address_category_count: ', address_category_count)
 
 
-def address_category_import_sqlite(client, args, db_path, table_name):
+def clv_address_category_import_sqlite(client, args, db_path, table_name):
 
-    address_category_model = client.model('myo.address.category')
+    address_category_model = client.model('clv.address.category')
 
     conn = sqlite3.connect(db_path)
     # conn.text_factory = str
