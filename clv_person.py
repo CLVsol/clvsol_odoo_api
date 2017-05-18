@@ -217,9 +217,11 @@ def myo_person_export_sqlite(client, args, db_path, table_name):
     print('--> person_count: ', person_count)
 
 
-def person_import_sqlite(client, args, db_path, table_name, tag_table_name, category_table_name, address_table_name):
+def clv_person_import_sqlite(
+        client, args, db_path, table_name, global_tag_table_name, category_table_name, address_table_name
+):
 
-    person_model = client.model('myo.person')
+    person_model = client.model('clv.person')
 
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
@@ -272,16 +274,36 @@ def person_import_sqlite(client, args, db_path, table_name, tag_table_name, cate
     for row in cursor:
         person_count += 1
 
-        print(person_count, row['id'], row['name'], row['code'], row['tag_ids'], row['category_ids'])
+        print(person_count, row['id'], row['name'].encode('utf-8'), row['code'], row['tag_ids'], row['category_ids'])
+
+        previous_state = row['state']
+        if previous_state == 'draft':
+            reg_state = 'draft'
+            state = 'new'
+        if previous_state == 'revised':
+            reg_state = 'revised'
+            state = 'available'
+        if previous_state == 'waiting':
+            reg_state = 'done'
+            state = 'waiting'
+        if previous_state == 'selected':
+            reg_state = 'done'
+            state = 'selected'
+        if previous_state == 'unselected':
+            reg_state = 'done'
+            state = 'unselected'
+        if previous_state == 'canceled':
+            reg_state = 'canceled'
+            state = 'unavailable'
 
         values = {
             # 'tag_ids': row['tag_ids'],
             # 'category_ids': row['category_ids'],
             'name': row['name'],
-            'alias': row['alias'],
+            # 'alias': row['alias'],
             'code': row['code'],
-            'random_field': row['random_field'],
-            'user_id': row['user_id'],
+            # 'random_field': row['random_field'],
+            # 'user_id': row['user_id'],
             'gender': row['gender'],
             'marital': row['marital'],
             'birthday': row['birthday'],
@@ -293,14 +315,15 @@ def person_import_sqlite(client, args, db_path, table_name, tag_table_name, cate
             # 'responsible_id': row['responsible_id'],
             'identification_id': row['identification_id'],
             'otherid': row['otherid'],
-            'rg': row['rg'],
-            'cpf': row['cpf'],
-            'country_id': row['country_id'],
+            # 'rg': row['rg'],
+            # 'cpf': row['cpf'],
+            # 'country_id': row['country_id'],
             'date_inclusion': row['date_inclusion'],
-            'state': row['state'],
+            'reg_state': reg_state,
+            'state': state,
             'notes': row['notes'],
             # 'address_id': row['address_id'],
-            'is_patient': row['is_patient'],
+            # 'is_patient': row['is_patient'],
             'active': row['active'],
             'active_log': row['active_log'],
         }
@@ -325,7 +348,7 @@ def person_import_sqlite(client, args, db_path, table_name, tag_table_name, cate
                 cursor2.execute(
                     '''
                     SELECT new_id
-                    FROM ''' + tag_table_name + '''
+                    FROM ''' + global_tag_table_name + '''
                     WHERE id = ?;''',
                     (tag_id,
                      )
@@ -333,7 +356,7 @@ def person_import_sqlite(client, args, db_path, table_name, tag_table_name, cate
                 new_tag_id = cursor2.fetchone()[0]
 
                 values = {
-                    'tag_ids': [(4, new_tag_id)],
+                    'global_tag_ids': [(4, new_tag_id)],
                 }
                 person_model.write(person_id, values)
 
@@ -429,7 +452,7 @@ def person_import_sqlite(client, args, db_path, table_name, tag_table_name, cate
     for row in cursor:
         person_count_2 += 1
 
-        print(person_count_2, row['id'], row['name'], row['code'], row['spouse_id'])
+        print(person_count_2, row['id'], row['name'].encode('utf-8'), row['code'], row['spouse_id'])
 
         cursor2.execute(
             '''
@@ -490,7 +513,7 @@ def person_import_sqlite(client, args, db_path, table_name, tag_table_name, cate
     for row in cursor:
         person_count_3 += 1
 
-        print(person_count_3, row['id'], row['name'], row['code'], row['father_id'])
+        print(person_count_3, row['id'], row['name'].encode('utf-8'), row['code'], row['father_id'])
 
         cursor2.execute(
             '''
@@ -551,7 +574,7 @@ def person_import_sqlite(client, args, db_path, table_name, tag_table_name, cate
     for row in cursor:
         person_count_4 += 1
 
-        print(person_count_4, row['id'], row['name'], row['code'], row['mother_id'])
+        print(person_count_4, row['id'], row['name'].encode('utf-8'), row['code'], row['mother_id'])
 
         cursor2.execute(
             '''
@@ -612,7 +635,7 @@ def person_import_sqlite(client, args, db_path, table_name, tag_table_name, cate
     for row in cursor:
         person_count_5 += 1
 
-        print(person_count_5, row['id'], row['name'], row['code'], row['responsible_id'])
+        print(person_count_5, row['id'], row['name'].encode('utf-8'), row['code'], row['responsible_id'])
 
         cursor2.execute(
             '''
