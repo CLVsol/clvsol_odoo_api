@@ -99,9 +99,9 @@ def myo_person_category_export_sqlite(client, args, db_path, table_name):
     print('--> person_category_count: ', person_category_count)
 
 
-def person_category_import_sqlite(client, args, db_path, table_name):
+def clv_person_category_import_sqlite(client, args, db_path, table_name):
 
-    person_category_model = client.model('myo.person.category')
+    person_category_model = client.model('clv.person.category')
 
     conn = sqlite3.connect(db_path)
     # conn.text_factory = str
@@ -132,8 +132,7 @@ def person_category_import_sqlite(client, args, db_path, table_name):
         person_category_count += 1
 
         print(
-            person_category_count, row['id'], row['parent_id'], row['name'], row['code'],
-            row['description'], row['notes'], row['color']
+            person_category_count, row['id'], row['parent_id'], row['name'].encode('utf-8'), row['code']
         )
 
         values = {
