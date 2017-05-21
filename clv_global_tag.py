@@ -185,13 +185,12 @@ def clv_global_tag_import_sqlite(client, args, db_path, table_name):
         tag_count += 1
 
         print(
-            tag_count, row['id'], row['parent_id'], row['name'], row['code'],
-            row['description'], row['notes'], row['color']
+            tag_count, row['id'], row['parent_id'], row['name'].encode('utf-8'), row['code'],
         )
 
         values = {
             'name': row['name'],
-            # 'code': row['code'],
+            'code': row['code'],
             'description': row['description'],
             'notes': row['notes'],
             'color': row['color'],

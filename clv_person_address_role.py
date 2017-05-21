@@ -93,9 +93,9 @@ def myo_person_address_role_export_sqlite(client, args, db_path, table_name):
     print('--> person_address_role_count: ', person_address_role_count)
 
 
-def person_address_role_import_sqlite(client, args, db_path, table_name):
+def clv_person_address_role_import_sqlite(client, args, db_path, table_name):
 
-    person_address_role_model = client.model('myo.person.address.role')
+    person_address_role_model = client.model('clv.person.address.role')
 
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row

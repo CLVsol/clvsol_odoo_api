@@ -199,9 +199,9 @@ def myo_address_export_sqlite(client, args, db_path, table_name):
     print('--> address_count: ', address_count)
 
 
-def address_import_sqlite(client, args, db_path, table_name, tag_table_name, category_table_name):
+def clv_address_import_sqlite(client, args, db_path, table_name, global_tag_table_name, category_table_name):
 
-    address_model = client.model('myo.address')
+    address_model = client.model('clv.address')
 
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
@@ -252,17 +252,36 @@ def address_import_sqlite(client, args, db_path, table_name, tag_table_name, cat
     for row in cursor:
         address_count += 1
 
-        print(address_count, row['id'], row['name'], row['code'], row['tag_ids'], row['category_ids'])
+        print(address_count, row['id'], row['name'].encode('utf-8'), row['code'], row['tag_ids'], row['category_ids'])
+
+        previous_state = row['state']
+        if previous_state == 'draft':
+            reg_state = 'draft'
+            state = 'new'
+        if previous_state == 'revised':
+            reg_state = 'revised'
+            state = 'available'
+        if previous_state == 'waiting':
+            reg_state = 'done'
+            state = 'waiting'
+        if previous_state == 'selected':
+            reg_state = 'done'
+            state = 'selected'
+        if previous_state == 'unselected':
+            reg_state = 'done'
+            state = 'unselected'
+        if previous_state == 'canceled':
+            reg_state = 'canceled'
+            state = 'unavailable'
 
         values = {
             # 'tag_ids': row['tag_ids'],
             # 'category_ids': row['category_ids'],
-            # 'parent_id': row['parent_id'],
             'name': row['name'],
-            'alias': row['alias'],
+            # 'alias': row['alias'],
             'code': row['code'],
-            'random_field': row['random_field'],
-            'user_id': row['user_id'],
+            # 'random_field': row['random_field'],
+            # 'user_id': row['user_id'],
             'zip': row['zip'],
             'country_id': row['country_id'],
             'state_id': row['state_id'],
@@ -276,9 +295,10 @@ def address_import_sqlite(client, args, db_path, table_name, tag_table_name, cat
             'mobile': row['mobile'],
             'fax': row['fax'],
             'email': row['email'],
-            'state': row['state'],
+            'reg_state': reg_state,
+            'state': state,
             'notes': row['notes'],
-            'is_residence': row['is_residence'],
+            # 'is_residence': row['is_residence'],
             'active': row['active'],
             'active_log': row['active_log'],
         }
@@ -303,7 +323,7 @@ def address_import_sqlite(client, args, db_path, table_name, tag_table_name, cat
                 cursor2.execute(
                     '''
                     SELECT new_id
-                    FROM ''' + tag_table_name + '''
+                    FROM ''' + global_tag_table_name + '''
                     WHERE id = ?;''',
                     (tag_id,
                      )
@@ -311,13 +331,13 @@ def address_import_sqlite(client, args, db_path, table_name, tag_table_name, cat
                 new_tag_id = cursor2.fetchone()[0]
 
                 values = {
-                    'tag_ids': [(4, new_tag_id)],
+                    'global_tag_ids': [(4, new_tag_id)],
                 }
                 address_model.write(address_id, values)
 
                 new_tag_ids.append(new_tag_id)
 
-            print('>>>>>', row[4], new_tag_ids)
+            print('>>>>>', row['name'].encode('utf-8'), new_tag_ids)
 
         if row['category_ids'] != '[]':
 
@@ -342,70 +362,10 @@ def address_import_sqlite(client, args, db_path, table_name, tag_table_name, cat
 
                 new_category_ids.append(new_category_id)
 
-            print('>>>>>', row[4], new_category_ids)
-
-    conn.commit()
-
-    data = cursor.execute('''
-        SELECT
-            id,
-            tag_ids,
-            category_ids,
-            parent_id,
-            name,
-            alias,
-            code,
-            random_field,
-            user_id,
-            zip,
-            country_id,
-            state_id,
-            city,
-            l10n_br_city_id,
-            street,
-            number,
-            street2,
-            district,
-            phone,
-            mobile,
-            fax,
-            email,
-            state,
-            notes,
-            is_residence,
-            active,
-            active_log,
-            new_id
-        FROM ''' + table_name + '''
-        WHERE parent_id IS NOT NULL;
-    ''')
-
-    address_count_2 = 0
-    for row in cursor:
-        address_count_2 += 1
-
-        print(address_count_2, row['id'], row['parent_id'], row['name'], row['code'], row['new_id'])
-
-        cursor2.execute(
-            '''
-            SELECT new_id
-            FROM ''' + table_name + '''
-            WHERE id = ?;''',
-            (row['parent_id'],
-             )
-        )
-        new_parent_id = cursor2.fetchone()[0]
-
-        print('>>>>>', row['id'], row['new_id'], row['parent_id'], new_parent_id)
-
-        values = {
-            'parent_id': new_parent_id,
-        }
-        address_model.write(row['new_id'], values)
+            print('>>>>>', row['name'].encode('utf-8'), new_category_ids)
 
     conn.commit()
     conn.close()
 
     print()
     print('--> address_count: ', address_count)
-    print('--> address_count_2: ', address_count_2)
