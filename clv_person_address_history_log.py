@@ -97,3 +97,102 @@ def myo_person_address_log_export_sqlite(client, args, db_path, table_name):
 
     print()
     print('--> person_address_log_count: ', person_address_log_count)
+
+
+def clv_person_address_history_log_import_sqlite(
+    client, args, db_path, table_name, person_address_history_table_name, res_users_table_name
+):
+
+    person_address_history_log_model = client.model('clv.person.address.history.log')
+
+    conn = sqlite3.connect(db_path)
+    # conn.text_factory = str
+    conn.row_factory = sqlite3.Row
+
+    cursor = conn.cursor()
+
+    cursor2 = conn.cursor()
+
+    data = cursor.execute('''
+        SELECT
+            id,
+            person_address_id,
+            user_id,
+            date_log,
+            values_,
+            action,
+            notes,
+            new_id
+        FROM ''' + table_name + '''
+        ORDER BY id;
+    ''')
+
+    print(data)
+    print([field[0] for field in cursor.description])
+
+    person_address_history_log_count = 0
+    for row in cursor:
+        person_address_history_log_count += 1
+
+        print(
+            person_address_history_log_count, row['id'], row['person_address_id'], row['user_id'], row['date_log'],
+            row['values_'], row['action'], row['notes']
+        )
+
+        if row['person_address_id']:
+
+            person_address_id = row['person_address_id']
+
+            cursor2.execute(
+                '''
+                SELECT new_id
+                FROM ''' + person_address_history_table_name + '''
+                WHERE id = ?;''',
+                (person_address_id,
+                 )
+            )
+            person_address_id = cursor2.fetchone()[0]
+            print('>>>>>', row['person_address_id'], person_address_id)
+
+        if row['user_id']:
+
+            user_id = row['user_id']
+
+            cursor2.execute(
+                '''
+                SELECT new_id
+                FROM ''' + res_users_table_name + '''
+                WHERE id = ?;''',
+                (user_id,
+                 )
+            )
+            user_id = cursor2.fetchone()[0]
+            if user_id is None:
+                user_id = 1
+            print('>>>>>', row['user_id'], user_id)
+
+        values = {
+            'person_address_history_id': person_address_id,
+            'user_id': user_id,
+            'date_log': row['date_log'],
+            'values': row['values_'],
+            'action': row['action'],
+            'notes': row['notes'],
+        }
+        person_address_history_log_id = person_address_history_log_model.create(values).id
+
+        cursor2.execute(
+            '''
+            UPDATE ''' + table_name + '''
+            SET new_id = ?
+            WHERE id = ?;''',
+            (person_address_history_log_id,
+             row['id']
+             )
+        )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> person_address_history_log_count: ', person_address_history_log_count)
