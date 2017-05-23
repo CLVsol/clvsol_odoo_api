@@ -34,3 +34,4 @@ from clv_person_address import *
 from clv_person_address_history import *
 from clv_person_address_role import *
 from clv_person_category import *
+from clv_person_log import *
