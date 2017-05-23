@@ -97,3 +97,100 @@ def myo_address_log_export_sqlite(client, args, db_path, table_name):
 
     print()
     print('--> address_log_count: ', address_log_count)
+
+
+def clv_address_log_import_sqlite(client, args, db_path, table_name, address_table_name, res_users_table_name):
+
+    address_log_model = client.model('clv.address.log')
+
+    conn = sqlite3.connect(db_path)
+    # conn.text_factory = str
+    conn.row_factory = sqlite3.Row
+
+    cursor = conn.cursor()
+
+    cursor2 = conn.cursor()
+
+    data = cursor.execute('''
+        SELECT
+            id,
+            address_id,
+            user_id,
+            date_log,
+            values_,
+            action,
+            notes,
+            new_id
+        FROM ''' + table_name + '''
+        ORDER BY id;
+    ''')
+
+    print(data)
+    print([field[0] for field in cursor.description])
+
+    address_log_count = 0
+    for row in cursor:
+        address_log_count += 1
+
+        print(
+            address_log_count, row['id'], row['address_id'], row['user_id'], row['date_log'],
+            row['values_'], row['action'], row['notes']
+        )
+
+        if row['address_id']:
+
+            address_id = row['address_id']
+
+            cursor2.execute(
+                '''
+                SELECT new_id
+                FROM ''' + address_table_name + '''
+                WHERE id = ?;''',
+                (address_id,
+                 )
+            )
+            address_id = cursor2.fetchone()[0]
+            print('>>>>>', row['address_id'], address_id)
+
+        if row['user_id']:
+
+            user_id = row['user_id']
+
+            cursor2.execute(
+                '''
+                SELECT new_id
+                FROM ''' + res_users_table_name + '''
+                WHERE id = ?;''',
+                (user_id,
+                 )
+            )
+            user_id = cursor2.fetchone()[0]
+            if user_id is None:
+                user_id = 1
+            print('>>>>>', row['user_id'], user_id)
+
+        values = {
+            'address_id': address_id,
+            'user_id': user_id,
+            'date_log': row['date_log'],
+            'values': row['values_'],
+            'action': row['action'],
+            'notes': row['notes'],
+        }
+        address_log_id = address_log_model.create(values).id
+
+        cursor2.execute(
+            '''
+            UPDATE ''' + table_name + '''
+            SET new_id = ?
+            WHERE id = ?;''',
+            (address_log_id,
+             row['id']
+             )
+        )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> address_log_count: ', address_log_count)
