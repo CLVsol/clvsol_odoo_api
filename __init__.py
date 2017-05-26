@@ -26,6 +26,10 @@ from res_users import *
 from clv_address import *
 from clv_address_category import *
 from clv_address_log import *
+from clv_document import *
+from clv_document_category import *
+from clv_document_log import *
+from clv_document_person import *
 from clv_employee import *
 from clv_global_tag import *
 from clv_mfile import *
@@ -36,3 +40,4 @@ from clv_person_address_history_log import *
 from clv_person_address_role import *
 from clv_person_category import *
 from clv_person_log import *
+from clv_survey import *
