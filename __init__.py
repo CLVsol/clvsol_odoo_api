@@ -28,6 +28,7 @@ from clv_address_category import *
 from clv_address_log import *
 from clv_document import *
 from clv_document_category import *
+from clv_document_log import *
 from clv_employee import *
 from clv_global_tag import *
 from clv_mfile import *
