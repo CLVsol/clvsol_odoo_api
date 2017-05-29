@@ -47,6 +47,7 @@ def myo_person_category_export_sqlite(client, args, db_path, table_name):
             );
     ''')
 
+    client.context = {'active_test': False}
     myo_person_category = client.model('myo.person.category')
     person_category_browse = myo_person_category.browse(args)
 

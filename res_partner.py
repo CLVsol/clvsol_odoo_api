@@ -54,6 +54,7 @@ def res_partner_export_sqlite(client, args, db_path, table_name):
         '''
     )
 
+    client.context = {'active_test': False}
     res_partner_model = client.model('res.partner')
     res_partner_browse = res_partner_model.browse(args)
 
