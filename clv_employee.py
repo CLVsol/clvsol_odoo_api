@@ -74,7 +74,7 @@ def hr_department_export_sqlite(client, args, db_path, table_name):
                 name,
                 active
                 )
-            VALUES(?,?)
+            VALUES(?,?,?)
             ''', (department_reg.id,
                   department_reg.name,
                   True,
@@ -126,7 +126,7 @@ def hr_job_export_sqlite(client, args, db_path, table_name):
                 name,
                 active
                 )
-            VALUES(?,?)
+            VALUES(?,?,?)
             ''', (job_reg.id,
                   job_reg.name,
                   True,
