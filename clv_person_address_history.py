@@ -66,11 +66,56 @@ def clv_person_address_history_import_sqlite(
             person_count, row['id'], row['tag_ids'], row['person_id'], row['address_id'], row['role_id']
         )
 
+        person_id = False
+        if row['person_id']:
+
+            person_id = row['person_id']
+
+            cursor2.execute(
+                '''
+                SELECT new_id
+                FROM ''' + person_table_name + '''
+                WHERE id = ?;''',
+                (person_id,
+                 )
+            )
+            person_id = cursor2.fetchone()[0]
+
+        address_id = False
+        if row['address_id']:
+
+            address_id = row['address_id']
+
+            cursor2.execute(
+                '''
+                SELECT new_id
+                FROM ''' + address_table_name + '''
+                WHERE id = ?;''',
+                (address_id,
+                 )
+            )
+            address_id = cursor2.fetchone()[0]
+
+        role_id = False
+        if row['role_id']:
+
+            role_id = row['role_id']
+
+            cursor2.execute(
+                '''
+                SELECT new_id
+                FROM ''' + role_table_name + '''
+                WHERE id = ?;''',
+                (role_id,
+                 )
+            )
+            role_id = cursor2.fetchone()[0]
+
         values = {
-            # 'tag_ids': row['tag_ids'],
-            # 'person_id': row['person_id'],
-            # 'address_id': row['address_id'],
-            # 'role_id': row['role_id'],
+            # 'global_tag_ids': row['tag_ids'],
+            'person_id': person_id,
+            'address_id': address_id,
+            'role_id': role_id,
             'sign_in_date': row['sign_in_date'],
             'sign_out_date': row['sign_out_date'],
             'notes': row['notes'],
@@ -113,69 +158,6 @@ def clv_person_address_history_import_sqlite(
         #         new_tag_ids.append(new_tag_id)
 
         #     print('>>>>>', row[4], new_tag_ids)
-
-        if row['person_id']:
-
-            person_id = row['person_id']
-
-            cursor2.execute(
-                '''
-                SELECT new_id
-                FROM ''' + person_table_name + '''
-                WHERE id = ?;''',
-                (person_id,
-                 )
-            )
-            person_id = cursor2.fetchone()[0]
-
-            values = {
-                'person_id': person_id,
-            }
-            person_address_history_model.write(person_address_history_id, values)
-
-            print('>>>>>', row['person_id'], person_id)
-
-        if row['address_id']:
-
-            address_id = row['address_id']
-
-            cursor2.execute(
-                '''
-                SELECT new_id
-                FROM ''' + address_table_name + '''
-                WHERE id = ?;''',
-                (address_id,
-                 )
-            )
-            address_id = cursor2.fetchone()[0]
-
-            values = {
-                'address_id': address_id,
-            }
-            person_address_history_model.write(person_address_history_id, values)
-
-            print('>>>>>', row['address_id'], address_id)
-
-        if row['role_id']:
-
-            role_id = row['role_id']
-
-            cursor2.execute(
-                '''
-                SELECT new_id
-                FROM ''' + role_table_name + '''
-                WHERE id = ?;''',
-                (role_id,
-                 )
-            )
-            role_id = cursor2.fetchone()[0]
-
-            values = {
-                'role_id': role_id,
-            }
-            person_address_history_model.write(person_address_history_id, values)
-
-            print('>>>>>', row['role_id'], role_id)
 
     conn.commit()
     conn.close()

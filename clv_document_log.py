@@ -149,7 +149,13 @@ def clv_document_log_import_sqlite(client, args, db_path, table_name, document_t
                 (document_id,
                  )
             )
+            # try:
+            #     document_id = cursor2.fetchone()[0]
+            # except Exception as e:
+            #     print('>>>>>XXXXX>>>>>', row['document_id'], e)
+            #     document_id = False
             document_id = cursor2.fetchone()[0]
+
             print('>>>>>', row['document_id'], document_id)
 
         if row['user_id']:
@@ -169,25 +175,26 @@ def clv_document_log_import_sqlite(client, args, db_path, table_name, document_t
                 user_id = 1
             print('>>>>>', row['user_id'], user_id)
 
-        values = {
-            'document_id': document_id,
-            'user_id': user_id,
-            'date_log': row['date_log'],
-            'values': row['values_'],
-            'action': row['action'],
-            'notes': row['notes'],
-        }
-        document_log_id = document_log_model.create(values).id
+        if document_id is not False:
+            values = {
+                'document_id': document_id,
+                'user_id': user_id,
+                'date_log': row['date_log'],
+                'values': row['values_'],
+                'action': row['action'],
+                'notes': row['notes'],
+            }
+            document_log_id = document_log_model.create(values).id
 
-        cursor2.execute(
-            '''
-            UPDATE ''' + table_name + '''
-            SET new_id = ?
-            WHERE id = ?;''',
-            (document_log_id,
-             row['id']
-             )
-        )
+            cursor2.execute(
+                '''
+                UPDATE ''' + table_name + '''
+                SET new_id = ?
+                WHERE id = ?;''',
+                (document_log_id,
+                 row['id']
+                 )
+            )
 
     conn.commit()
     conn.close()

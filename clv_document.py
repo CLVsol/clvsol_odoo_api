@@ -22,6 +22,7 @@
 from __future__ import print_function
 
 import sqlite3
+import re
 
 
 def myo_document_export_sqlite(client, args, db_path, table_name):
@@ -144,3 +145,236 @@ def myo_document_export_sqlite(client, args, db_path, table_name):
 
     print()
     print('--> document_count: ', document_count)
+
+
+def clv_document_import_sqlite(
+        client, args, db_path, table_name, global_tag_table_name, category_table_name,
+        survey_survey_table_name, res_users_table_name
+):
+
+    document_model = client.model('clv.document')
+    SurveySurvey = client.model('survey.survey')
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+
+    cursor = conn.cursor()
+
+    cursor2 = conn.cursor()
+
+    document_count = 0
+
+    data = cursor.execute(
+        '''
+        SELECT
+            id,
+            tag_ids,
+            category_ids,
+            name,
+            code,
+            date_requested,
+            date_document,
+            date_foreseen,
+            date_deadline,
+            user_id,
+            state,
+            notes,
+            address_id,
+            active,
+            active_log,
+            base_document_id,
+            survey_id,
+            survey_user_input_id,
+            base_survey_user_input_id,
+            new_id
+        FROM ''' + table_name + ''';
+        '''
+    )
+
+    print(data)
+    print([field[0] for field in cursor.description])
+    for row in cursor:
+        document_count += 1
+
+        print(document_count, row['id'], row['name'].encode('utf-8'), row['code'], row['tag_ids'], row['category_ids'])
+
+        previous_state = row['state']
+        if previous_state == 'draft':
+            reg_state = 'draft'
+            state = 'new'
+        if previous_state == 'revised':
+            reg_state = 'revised'
+            state = 'available'
+        if previous_state == 'waiting':
+            reg_state = 'done'
+            state = 'waiting'
+        if previous_state == 'done':
+            reg_state = 'done'
+            state = 'returned'
+        if previous_state == 'canceled':
+            reg_state = 'canceled'
+            state = 'discarded'
+
+        new_tag_ids = False
+        if row['tag_ids'] != '[]':
+
+            tag_ids = row['tag_ids'].split(',')
+            new_tag_ids = []
+            for x in range(0, len(tag_ids)):
+                tag_id = int(re.sub('[^0-9]', '', tag_ids[x]))
+                cursor2.execute(
+                    '''
+                    SELECT new_id
+                    FROM ''' + global_tag_table_name + '''
+                    WHERE id = ?;''',
+                    (tag_id,
+                     )
+                )
+                new_tag_id = cursor2.fetchone()[0]
+
+                new_tag_ids.append((4, new_tag_id))
+
+        category_ids = False
+        if row['category_ids'] != '[]':
+
+            category_ids = row['category_ids'].split(',')
+            new_category_ids = []
+            for x in range(0, len(category_ids)):
+                category_id = int(re.sub('[^0-9]', '', category_ids[x]))
+                cursor2.execute(
+                    '''
+                    SELECT new_id
+                    FROM ''' + category_table_name + '''
+                    WHERE id = ?;''',
+                    (category_id,
+                     )
+                )
+                new_category_id = cursor2.fetchone()[0]
+
+                new_category_ids.append((4, new_category_id))
+
+        survey_id = False
+        if row['survey_id']:
+
+            survey_id = row['survey_id']
+
+            cursor2.execute(
+                '''
+                SELECT code
+                FROM ''' + survey_survey_table_name + '''
+                WHERE id = ?;''',
+                (survey_id,
+                 )
+            )
+            survey_code = cursor2.fetchone()[0]
+
+            survey_survey_id = SurveySurvey.search([
+                ('code', '=', survey_code),
+            ])[0]
+
+        user_id = False
+        if row['user_id']:
+
+            user_id = row['user_id']
+
+            cursor2.execute(
+                '''
+                SELECT new_id
+                FROM ''' + res_users_table_name + '''
+                WHERE id = ?;''',
+                (user_id,
+                 )
+            )
+            user_id = cursor2.fetchone()[0]
+
+        values = {
+            'global_tag_ids': new_tag_ids,
+            'category_ids': new_category_ids,
+            'name': row['name'],
+            'code': row['code'],
+            'user_id': user_id,
+            'date_requested': row['date_requested'],
+            'date_document': row['date_document'],
+            'date_foreseen': row['date_foreseen'],
+            'date_deadline': row['date_deadline'],
+            'reg_state': reg_state,
+            'state': state,
+            'notes': row['notes'],
+            'active': row['active'],
+            'active_log': row['active_log'],
+            # 'base_document_id': row['base_document_id'],
+            'survey_id': survey_survey_id,
+            # 'survey_user_input_id': row['survey_user_input_id'],
+            # 'base_survey_user_input_id': row['base_survey_user_input_id'],
+        }
+        document_id = document_model.create(values).id
+
+        cursor2.execute(
+            '''
+           UPDATE ''' + table_name + '''
+           SET new_id = ?
+           WHERE id = ?;''',
+            (document_id,
+             row['id']
+             )
+        )
+
+    conn.commit()
+
+    data = cursor.execute('''
+        SELECT
+            id,
+            tag_ids,
+            category_ids,
+            name,
+            code,
+            date_requested,
+            date_document,
+            date_foreseen,
+            date_deadline,
+            user_id,
+            state,
+            notes,
+            address_id,
+            active,
+            active_log,
+            base_document_id,
+            survey_id,
+            survey_user_input_id,
+            base_survey_user_input_id,
+            new_id
+        FROM ''' + table_name + '''
+        WHERE base_document_id IS NOT NULL;
+    ''')
+
+    document_count_2 = 0
+    for row in cursor:
+        document_count_2 += 1
+
+        print(document_count_2, row['id'], row['name'].encode('utf-8'), row['code'], row['base_document_id'])
+
+        cursor2.execute(
+            '''
+            SELECT new_id
+            FROM ''' + table_name + '''
+            WHERE id = ?;''',
+            (row['base_document_id'],
+             )
+        )
+        new_base_document_id = cursor2.fetchone()[0]
+
+        print('>>>>>', row['id'], row['new_id'], row['base_document_id'], new_base_document_id)
+
+        values = {
+            'base_document_id': new_base_document_id,
+        }
+        document_model.write(row['new_id'], values)
+
+    conn.commit()
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> document_count: ', document_count)
+    print('--> document_count_2: ', document_count_2)
