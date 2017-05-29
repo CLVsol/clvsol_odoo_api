@@ -109,6 +109,7 @@ def res_users_export_sqlite(client, args, db_path, table_name, conn_string):
             password_crypt,
             image,
             groups_id,
+            active,
             new_id INTEGER
             );
         '''
@@ -144,9 +145,10 @@ def res_users_export_sqlite(client, args, db_path, table_name, conn_string):
                 login,
                 password_crypt,
                 image,
-                groups_id
+                groups_id,
+                active
                 )
-            VALUES(?,?,?,?,?,?,?,?)
+            VALUES(?,?,?,?,?,?,?,?,?)
             ''', (res_users_reg.id,
                   res_users_reg.name,
                   res_users_reg.partner_id.id,
@@ -155,6 +157,7 @@ def res_users_export_sqlite(client, args, db_path, table_name, conn_string):
                   row[1],
                   res_users_reg.image,
                   str(res_users_reg.groups_id.id),
+                  res_users_reg.active,
                   )
         )
 
@@ -168,6 +171,7 @@ def res_users_export_sqlite(client, args, db_path, table_name, conn_string):
 
 def res_users_import_sqlite(client, args, db_path, table_name):
 
+    client.context = {'active_test': False}
     res_users_model = client.model('res.users')
 
     conn = sqlite3.connect(db_path)
@@ -188,6 +192,7 @@ def res_users_import_sqlite(client, args, db_path, table_name):
             password_crypt,
             image,
             groups_id,
+            active,
             new_id
         FROM ''' + table_name + ''';
     ''')
@@ -214,6 +219,7 @@ def res_users_import_sqlite(client, args, db_path, table_name):
                 'password_crypt': row['password_crypt'],
                 'image': row['image'],
                 # 'groups_id': row['groups_id'],
+                'active': row['active'],
             }
             res_users_id = res_users_model.create(values).id
 
