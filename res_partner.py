@@ -49,6 +49,7 @@ def res_partner_export_sqlite(client, args, db_path, table_name):
             tz,
             lang,
             image,
+            active,
             new_id INTEGER
             );
         '''
@@ -89,9 +90,10 @@ def res_partner_export_sqlite(client, args, db_path, table_name):
                 company_id,
                 tz,
                 lang,
-                image
+                image,
+                active
                 )
-            VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
             ''', (res_partner_reg.id,
                   res_partner_reg.name,
                   res_partner_reg.customer,
@@ -104,6 +106,7 @@ def res_partner_export_sqlite(client, args, db_path, table_name):
                   res_partner_reg.tz,
                   res_partner_reg.lang,
                   res_partner_reg.image,
+                  res_partner_reg.active,
                   )
         )
 
@@ -117,6 +120,7 @@ def res_partner_export_sqlite(client, args, db_path, table_name):
 
 def res_partner_import_sqlite(client, args, db_path, table_name):
 
+    client.context = {'active_test': False}
     res_partner_model = client.model('res.partner')
 
     conn = sqlite3.connect(db_path)
@@ -141,6 +145,7 @@ def res_partner_import_sqlite(client, args, db_path, table_name):
             tz,
             lang,
             image,
+            active,
             new_id
         FROM ''' + table_name + ''';
     ''')
@@ -171,6 +176,7 @@ def res_partner_import_sqlite(client, args, db_path, table_name):
                 'tz': row['tz'],
                 'lang': row['lang'],
                 'image': row['image'],
+                'active': row['active'],
             }
             res_partner_id = res_partner_model.create(values).id
 
@@ -200,6 +206,7 @@ def res_partner_import_sqlite(client, args, db_path, table_name):
             tz,
             lang,
             image,
+            active,
             new_id
         FROM ''' + table_name + '''
         WHERE parent_id IS NOT NULL;
