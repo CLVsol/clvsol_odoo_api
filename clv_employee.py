@@ -52,6 +52,7 @@ def hr_department_export_sqlite(client, args, db_path, table_name):
         CREATE TABLE ''' + table_name + ''' (
             id INTEGER NOT NULL PRIMARY KEY,
             name,
+            active,
             new_id INTEGER
             );
         '''
@@ -70,11 +71,13 @@ def hr_department_export_sqlite(client, args, db_path, table_name):
         cursor.execute('''
             INSERT INTO ''' + table_name + '''(
                 id,
-                name
+                name,
+                active
                 )
             VALUES(?,?)
             ''', (department_reg.id,
                   department_reg.name,
+                  True,
                   )
         )
 
@@ -101,6 +104,7 @@ def hr_job_export_sqlite(client, args, db_path, table_name):
         CREATE TABLE ''' + table_name + ''' (
             id INTEGER NOT NULL PRIMARY KEY,
             name,
+            active,
             new_id INTEGER
             );
         '''
@@ -119,11 +123,13 @@ def hr_job_export_sqlite(client, args, db_path, table_name):
         cursor.execute('''
             INSERT INTO ''' + table_name + '''(
                 id,
-                name
+                name,
+                active
                 )
             VALUES(?,?)
             ''', (job_reg.id,
                   job_reg.name,
+                  True,
                   )
         )
 
@@ -137,6 +143,7 @@ def hr_job_export_sqlite(client, args, db_path, table_name):
 
 def hr_department_import_sqlite(client, args, db_path, table_name):
 
+    client.context = {'active_test': False}
     hr_department_model = client.model('hr.department')
 
     conn = sqlite3.connect(db_path)
@@ -151,6 +158,7 @@ def hr_department_import_sqlite(client, args, db_path, table_name):
         SELECT
             id,
             name,
+            active,
             new_id
         FROM ''' + table_name + ''';
     ''')
@@ -171,6 +179,7 @@ def hr_department_import_sqlite(client, args, db_path, table_name):
 
             values = {
                 'name': row['name'],
+                'active': row['active'],
             }
             hr_department_id = hr_department_model.create(values).id
 
@@ -193,6 +202,7 @@ def hr_department_import_sqlite(client, args, db_path, table_name):
 
 def hr_job_import_sqlite(client, args, db_path, table_name):
 
+    client.context = {'active_test': False}
     hr_job_model = client.model('hr.job')
 
     conn = sqlite3.connect(db_path)
@@ -207,6 +217,7 @@ def hr_job_import_sqlite(client, args, db_path, table_name):
         SELECT
             id,
             name,
+            active,
             new_id
         FROM ''' + table_name + ''';
     ''')
@@ -227,6 +238,7 @@ def hr_job_import_sqlite(client, args, db_path, table_name):
 
             values = {
                 'name': row['name'],
+                'active': row['active'],
             }
             hr_job_id = hr_job_model.create(values).id
 
@@ -320,6 +332,7 @@ def hr_employee_export_sqlite(client, args, db_path, table_name):
             job_id,
             user_id,
             image,
+            active,
             new_id INTEGER
             );
         '''
@@ -366,9 +379,10 @@ def hr_employee_export_sqlite(client, args, db_path, table_name):
                 address_id,
                 job_id,
                 user_id,
-                image
+                image,
+                active
                 )
-            VALUES(?,?,?,?,?,?,?,?,?,?)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?)
             ''', (employee_reg.id,
                   employee_reg.resource_id.id,
                   employee_reg.name,
@@ -379,6 +393,7 @@ def hr_employee_export_sqlite(client, args, db_path, table_name):
                   job_id,
                   employee_reg.user_id.id,
                   image,
+                  employee_reg.active,
                   )
         )
 
@@ -395,6 +410,7 @@ def hr_employee_import_sqlite(
     res_partner_table_name, res_users_table_name
 ):
 
+    client.context = {'active_test': False}
     hr_employee_model = client.model('hr.employee')
 
     conn = sqlite3.connect(db_path)
@@ -417,6 +433,7 @@ def hr_employee_import_sqlite(
             job_id,
             user_id,
             image,
+            active,
             new_id
         FROM ''' + table_name + ''';
     ''')
@@ -496,6 +513,7 @@ def hr_employee_import_sqlite(
                 'department_id': new_department_id,
                 'user_id': new_user_id,
                 'image': row['image'],
+                'active': row['active'],
             }
             hr_employee_id = hr_employee_model.create(values).id
 
