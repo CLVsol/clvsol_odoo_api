@@ -215,39 +215,7 @@ def clv_document_import_sqlite(
             reg_state = 'canceled'
             state = 'discarded'
 
-        values = {
-            # 'tag_ids': row['tag_ids'],
-            # 'category_ids': row['category_ids'],
-            'name': row['name'],
-            'code': row['code'],
-            # 'user_id': row['user_id'],
-            'date_requested': row['date_requested'],
-            'date_document': row['date_document'],
-            'date_foreseen': row['date_foreseen'],
-            'date_deadline': row['date_deadline'],
-            'reg_state': reg_state,
-            'state': state,
-            'notes': row['notes'],
-            # 'address_id': row['address_id'],
-            'active': row['active'],
-            'active_log': row['active_log'],
-            # 'base_document_id': row['base_document_id'],
-            # 'survey_id': row['survey_id'],
-            # 'survey_user_input_id': row['survey_user_input_id'],
-            # 'base_survey_user_input_id': row['base_survey_user_input_id'],
-        }
-        document_id = document_model.create(values).id
-
-        cursor2.execute(
-            '''
-           UPDATE ''' + table_name + '''
-           SET new_id = ?
-           WHERE id = ?;''',
-            (document_id,
-             row['id']
-             )
-        )
-
+        new_tag_ids = False
         if row['tag_ids'] != '[]':
 
             tag_ids = row['tag_ids'].split(',')
@@ -264,15 +232,9 @@ def clv_document_import_sqlite(
                 )
                 new_tag_id = cursor2.fetchone()[0]
 
-                values = {
-                    'global_tag_ids': [(4, new_tag_id)],
-                }
-                document_model.write(document_id, values)
+                new_tag_ids.append((4, new_tag_id))
 
-                new_tag_ids.append(new_tag_id)
-
-            print('>>>>>', row[4], new_tag_ids)
-
+        category_ids = False
         if row['category_ids'] != '[]':
 
             category_ids = row['category_ids'].split(',')
@@ -289,36 +251,9 @@ def clv_document_import_sqlite(
                 )
                 new_category_id = cursor2.fetchone()[0]
 
-                values = {
-                    'category_ids': [(4, new_category_id)],
-                }
-                document_model.write(document_id, values)
+                new_category_ids.append((4, new_category_id))
 
-                new_category_ids.append(new_category_id)
-
-            print('>>>>>', row['category_ids'], new_category_ids)
-
-        # if row['address_id']:
-
-        #     address_id = row['address_id']
-
-        #     cursor2.execute(
-        #         '''
-        #         SELECT new_id
-        #         FROM ''' + address_table_name + '''
-        #         WHERE id = ?;''',
-        #         (address_id,
-        #          )
-        #     )
-        #     address_id = cursor2.fetchone()[0]
-
-        #     values = {
-        #         'address_id': address_id,
-        #     }
-        #     document_model.write(document_id, values)
-
-        #     print('>>>>>', row['address_id'], address_id)
-
+        survey_id = False
         if row['survey_id']:
 
             survey_id = row['survey_id']
@@ -337,13 +272,7 @@ def clv_document_import_sqlite(
                 ('code', '=', survey_code),
             ])[0]
 
-            values = {
-                'survey_id': survey_survey_id,
-            }
-            document_model.write(document_id, values)
-
-            print('>>>>>', row['survey_id'], survey_survey_id)
-
+        user_id = False
         if row['user_id']:
 
             user_id = row['user_id']
@@ -358,12 +287,37 @@ def clv_document_import_sqlite(
             )
             user_id = cursor2.fetchone()[0]
 
-            values = {
-                'user_id': user_id,
-            }
-            document_model.write(document_id, values)
+        values = {
+            'global_tag_ids': new_tag_ids,
+            'category_ids': new_category_ids,
+            'name': row['name'],
+            'code': row['code'],
+            'user_id': user_id,
+            'date_requested': row['date_requested'],
+            'date_document': row['date_document'],
+            'date_foreseen': row['date_foreseen'],
+            'date_deadline': row['date_deadline'],
+            'reg_state': reg_state,
+            'state': state,
+            'notes': row['notes'],
+            'active': row['active'],
+            'active_log': row['active_log'],
+            # 'base_document_id': row['base_document_id'],
+            'survey_id': survey_survey_id,
+            # 'survey_user_input_id': row['survey_user_input_id'],
+            # 'base_survey_user_input_id': row['base_survey_user_input_id'],
+        }
+        document_id = document_model.create(values).id
 
-            print('>>>>>', row['user_id'], user_id)
+        cursor2.execute(
+            '''
+           UPDATE ''' + table_name + '''
+           SET new_id = ?
+           WHERE id = ?;''',
+            (document_id,
+             row['id']
+             )
+        )
 
     conn.commit()
 
