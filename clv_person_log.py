@@ -47,6 +47,7 @@ def myo_person_log_export_sqlite(client, args, db_path, table_name):
             );
     ''')
 
+    client.context = {'active_test': False}
     myo_person_log = client.model('myo.person.log')
     person_log_browse = myo_person_log.browse(args)
 

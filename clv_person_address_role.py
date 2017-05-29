@@ -45,6 +45,7 @@ def myo_person_address_role_export_sqlite(client, args, db_path, table_name):
             );
     ''')
 
+    client.context = {'active_test': False}
     myo_person_address_role = client.model('myo.person.address.role')
     person_address_role_browse = myo_person_address_role.browse(args)
 

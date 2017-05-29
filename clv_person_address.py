@@ -52,6 +52,7 @@ def myo_person_address_export_sqlite(client, args, db_path, table_name):
         '''
     )
 
+    client.context = {'active_test': False}
     person_address_model = client.model('myo.person.address')
     person_address_browse = person_address_model.browse(args)
 

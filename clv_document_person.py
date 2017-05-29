@@ -48,6 +48,7 @@ def myo_document_person_export_sqlite(client, args, db_path, table_name):
         '''
     )
 
+    client.context = {'active_test': False}
     document_person_model = client.model('myo.document.person')
     document_person_browse = document_person_model.browse(args)
 

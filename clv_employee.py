@@ -57,6 +57,7 @@ def hr_department_export_sqlite(client, args, db_path, table_name):
         '''
     )
 
+    client.context = {'active_test': False}
     department_model = client.model('hr.department')
     department_browse = department_model.browse(args)
 
@@ -105,6 +106,7 @@ def hr_job_export_sqlite(client, args, db_path, table_name):
         '''
     )
 
+    client.context = {'active_test': False}
     job_model = client.model('hr.job')
     job_browse = job_model.browse(args)
 
@@ -323,6 +325,7 @@ def hr_employee_export_sqlite(client, args, db_path, table_name):
         '''
     )
 
+    client.context = {'active_test': False}
     employee_model = client.model('hr.employee')
     employee_browse = employee_model.browse(args)
 

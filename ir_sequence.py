@@ -59,6 +59,7 @@ def ir_sequence_export_sqlite(client, args, db_path, table_name, conn_string):
     pg_conn = psycopg2.connect(conn_string)
     pg_cursor = pg_conn.cursor()
 
+    client.context = {'active_test': False}
     ir_sequence_model = client.model('ir.sequence')
     ir_sequence_browse = ir_sequence_model.browse(args)
 

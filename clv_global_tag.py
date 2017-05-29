@@ -47,6 +47,7 @@ def myo_tag_export_sqlite(client, args, db_path, table_name):
             );
     ''')
 
+    client.context = {'active_test': False}
     myo_tag = client.model('myo.tag')
     tag_browse = myo_tag.browse(args)
 
@@ -119,6 +120,7 @@ def clv_tag_export_sqlite(client, args, db_path, table_name):
             );
     ''')
 
+    client.context = {'active_test': False}
     clv_tag = client.model('clv_tag')
     tag_browse = clv_tag.browse(args)
 

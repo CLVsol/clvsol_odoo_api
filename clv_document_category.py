@@ -47,6 +47,7 @@ def myo_document_category_export_sqlite(client, args, db_path, table_name):
             );
     ''')
 
+    client.context = {'active_test': False}
     myo_document_category = client.model('myo.document.category')
     document_category_browse = myo_document_category.browse(args)
 

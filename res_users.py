@@ -23,7 +23,6 @@ from __future__ import print_function
 
 import sqlite3
 import psycopg2
-import re
 
 
 def res_users_create_user(client, company_name, lang, tz, user_name, user_email, user_pw, user_image):
@@ -118,6 +117,7 @@ def res_users_export_sqlite(client, args, db_path, table_name, conn_string):
     pg_conn = psycopg2.connect(conn_string)
     pg_cursor = pg_conn.cursor()
 
+    client.context = {'active_test': False}
     res_users_model = client.model('res.users')
     res_users_browse = res_users_model.browse(args)
 

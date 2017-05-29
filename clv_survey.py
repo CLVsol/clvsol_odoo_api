@@ -46,6 +46,7 @@ def survey_survey_export_sqlite(client, args, db_path, table_name):
         '''
     )
 
+    client.context = {'active_test': False}
     survey_model = client.model('survey.survey')
     survey_browse = survey_model.browse(args)
 

@@ -47,6 +47,7 @@ def myo_address_category_export_sqlite(client, args, db_path, table_name):
             );
     ''')
 
+    client.context = {'active_test': False}
     myo_address_category = client.model('myo.address.category')
     address_category_browse = myo_address_category.browse(args)
 
