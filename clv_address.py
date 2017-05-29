@@ -274,9 +274,47 @@ def clv_address_import_sqlite(client, args, db_path, table_name, global_tag_tabl
             reg_state = 'canceled'
             state = 'unavailable'
 
+        new_tag_ids = False
+        if row['tag_ids'] != '[]':
+
+            tag_ids = row['tag_ids'].split(',')
+            new_tag_ids = []
+            for x in range(0, len(tag_ids)):
+                tag_id = int(re.sub('[^0-9]', '', tag_ids[x]))
+                cursor2.execute(
+                    '''
+                    SELECT new_id
+                    FROM ''' + global_tag_table_name + '''
+                    WHERE id = ?;''',
+                    (tag_id,
+                     )
+                )
+                new_tag_id = cursor2.fetchone()[0]
+
+                new_tag_ids.append((4, new_tag_id))
+
+        new_category_ids = False
+        if row['category_ids'] != '[]':
+
+            category_ids = row['category_ids'].split(',')
+            new_category_ids = []
+            for x in range(0, len(category_ids)):
+                category_id = int(re.sub('[^0-9]', '', category_ids[x]))
+                cursor2.execute(
+                    '''
+                    SELECT new_id
+                    FROM ''' + category_table_name + '''
+                    WHERE id = ?;''',
+                    (category_id,
+                     )
+                )
+                new_category_id = cursor2.fetchone()[0]
+
+                new_category_ids.append((4, new_category_id))
+
         values = {
-            # 'tag_ids': row['tag_ids'],
-            # 'category_ids': row['category_ids'],
+            'global_tag_ids': new_tag_ids,
+            'category_ids': new_category_ids,
             'name': row['name'],
             # 'alias': row['alias'],
             'code': row['code'],
@@ -313,56 +351,6 @@ def clv_address_import_sqlite(client, args, db_path, table_name, global_tag_tabl
              row['id']
              )
         )
-
-        if row['tag_ids'] != '[]':
-
-            tag_ids = row['tag_ids'].split(',')
-            new_tag_ids = []
-            for x in range(0, len(tag_ids)):
-                tag_id = int(re.sub('[^0-9]', '', tag_ids[x]))
-                cursor2.execute(
-                    '''
-                    SELECT new_id
-                    FROM ''' + global_tag_table_name + '''
-                    WHERE id = ?;''',
-                    (tag_id,
-                     )
-                )
-                new_tag_id = cursor2.fetchone()[0]
-
-                values = {
-                    'global_tag_ids': [(4, new_tag_id)],
-                }
-                address_model.write(address_id, values)
-
-                new_tag_ids.append(new_tag_id)
-
-            print('>>>>>', row['name'].encode('utf-8'), new_tag_ids)
-
-        if row['category_ids'] != '[]':
-
-            category_ids = row['category_ids'].split(',')
-            new_category_ids = []
-            for x in range(0, len(category_ids)):
-                category_id = int(re.sub('[^0-9]', '', category_ids[x]))
-                cursor2.execute(
-                    '''
-                    SELECT new_id
-                    FROM ''' + category_table_name + '''
-                    WHERE id = ?;''',
-                    (category_id,
-                     )
-                )
-                new_category_id = cursor2.fetchone()[0]
-
-                values = {
-                    'category_ids': [(4, new_category_id)],
-                }
-                address_model.write(address_id, values)
-
-                new_category_ids.append(new_category_id)
-
-            print('>>>>>', row['name'].encode('utf-8'), new_category_ids)
 
     conn.commit()
     conn.close()
