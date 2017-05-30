@@ -143,11 +143,9 @@ def hr_job_export_sqlite(client, args, db_path, table_name):
 
 def hr_department_import_sqlite(client, args, db_path, table_name):
 
-    client.context = {'active_test': False}
     hr_department_model = client.model('hr.department')
 
     conn = sqlite3.connect(db_path)
-    # conn.text_factory = str
     conn.row_factory = sqlite3.Row
 
     cursor = conn.cursor()
@@ -171,10 +169,18 @@ def hr_department_import_sqlite(client, args, db_path, table_name):
         hr_department_count += 1
 
         print(
-            hr_department_count, row['id'], row['name'],
+            hr_department_count, row['id'], row['name'], row['active'],
         )
 
-        hr_department_browse = hr_department_model.browse([('name', '=', row['name']), ])
+        hr_department_browse = hr_department_model.browse([('name', '=', row['name']), ('active', '=', True)])
+        if hr_department_browse.id != []:
+            hr_department_id = hr_department_browse.id[0]
+
+        hr_department_browse_2 = hr_department_model.browse([('name', '=', row['name']), ('active', '=', False)])
+        if hr_department_browse_2.id != []:
+            hr_department_browse = hr_department_browse_2
+            hr_department_id = hr_department_browse_2.id[0]
+
         if hr_department_browse.id == []:
 
             values = {
@@ -183,15 +189,15 @@ def hr_department_import_sqlite(client, args, db_path, table_name):
             }
             hr_department_id = hr_department_model.create(values).id
 
-            cursor2.execute(
-                '''
-                UPDATE ''' + table_name + '''
-                SET new_id = ?
-                WHERE id = ?;''',
-                (hr_department_id,
-                 row['id']
-                 )
-            )
+        cursor2.execute(
+            '''
+            UPDATE ''' + table_name + '''
+            SET new_id = ?
+            WHERE id = ?;''',
+            (hr_department_id,
+             row['id']
+             )
+        )
 
     conn.commit()
     conn.close()
@@ -202,11 +208,9 @@ def hr_department_import_sqlite(client, args, db_path, table_name):
 
 def hr_job_import_sqlite(client, args, db_path, table_name):
 
-    client.context = {'active_test': False}
     hr_job_model = client.model('hr.job')
 
     conn = sqlite3.connect(db_path)
-    # conn.text_factory = str
     conn.row_factory = sqlite3.Row
 
     cursor = conn.cursor()
@@ -230,10 +234,18 @@ def hr_job_import_sqlite(client, args, db_path, table_name):
         hr_job_count += 1
 
         print(
-            hr_job_count, row['id'], row['name'].encode('utf-8'),
+            hr_job_count, row['id'], row['name'].encode('utf-8'), row['active'],
         )
 
-        hr_job_browse = hr_job_model.browse([('name', '=', row['name']), ])
+        hr_job_browse = hr_job_model.browse([('name', '=', row['name']), ('active', '=', True)])
+        if hr_job_browse.id != []:
+            hr_job_id = hr_job_browse.id[0]
+
+        hr_job_browse_2 = hr_job_model.browse([('name', '=', row['name']), ('active', '=', False)])
+        if hr_job_browse_2.id != []:
+            hr_job_browse = hr_job_browse_2
+            hr_job_id = hr_job_browse_2.id[0]
+
         if hr_job_browse.id == []:
 
             values = {
@@ -242,15 +254,15 @@ def hr_job_import_sqlite(client, args, db_path, table_name):
             }
             hr_job_id = hr_job_model.create(values).id
 
-            cursor2.execute(
-                '''
-                UPDATE ''' + table_name + '''
-                SET new_id = ?
-                WHERE id = ?;''',
-                (hr_job_id,
-                 row['id']
-                 )
-            )
+        cursor2.execute(
+            '''
+            UPDATE ''' + table_name + '''
+            SET new_id = ?
+            WHERE id = ?;''',
+            (hr_job_id,
+             row['id']
+             )
+        )
 
     conn.commit()
     conn.close()
@@ -410,11 +422,9 @@ def hr_employee_import_sqlite(
     res_partner_table_name, res_users_table_name
 ):
 
-    client.context = {'active_test': False}
     hr_employee_model = client.model('hr.employee')
 
     conn = sqlite3.connect(db_path)
-    # conn.text_factory = str
     conn.row_factory = sqlite3.Row
 
     cursor = conn.cursor()
@@ -449,7 +459,15 @@ def hr_employee_import_sqlite(
             hr_employee_count, row['id'], row['name'].encode('utf-8'), row['code'],
         )
 
-        hr_employee_browse = hr_employee_model.browse([('name', '=', row['name']), ])
+        hr_employee_browse = hr_employee_model.browse([('name', '=', row['name']), ('active', '=', True)])
+        if hr_employee_browse.id != []:
+            hr_employee_id = hr_employee_browse.id[0]
+
+        hr_employee_browse_2 = hr_employee_model.browse([('name', '=', row['name']), ('active', '=', False)])
+        if hr_employee_browse_2.id != []:
+            hr_employee_browse = hr_employee_browse_2
+            hr_employee_id = hr_employee_browse_2.id[0]
+
         if hr_employee_browse.id == []:
 
             department_id = row['department_id']
@@ -517,15 +535,15 @@ def hr_employee_import_sqlite(
             }
             hr_employee_id = hr_employee_model.create(values).id
 
-            cursor2.execute(
-                '''
-                UPDATE ''' + table_name + '''
-                SET new_id = ?
-                WHERE id = ?;''',
-                (hr_employee_id,
-                 row['id']
-                 )
-            )
+        cursor2.execute(
+            '''
+            UPDATE ''' + table_name + '''
+            SET new_id = ?
+            WHERE id = ?;''',
+            (hr_employee_id,
+             row['id']
+             )
+        )
 
     conn.commit()
     conn.close()
