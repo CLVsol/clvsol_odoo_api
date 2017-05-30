@@ -447,8 +447,6 @@ def clv_person_import_sqlite(
         )
         new_spouse_id = cursor2.fetchone()[0]
 
-        print('>>>>>', row['id'], row['new_id'], row['spouse_id'], new_spouse_id)
-
         values = {
             'spouse_id': new_spouse_id,
         }
@@ -507,8 +505,6 @@ def clv_person_import_sqlite(
              )
         )
         new_father_id = cursor2.fetchone()[0]
-
-        print('>>>>>', row['id'], row['new_id'], row['father_id'], new_father_id)
 
         values = {
             'father_id': new_father_id,
@@ -569,8 +565,6 @@ def clv_person_import_sqlite(
         )
         new_mother_id = cursor2.fetchone()[0]
 
-        print('>>>>>', row['id'], row['new_id'], row['mother_id'], new_mother_id)
-
         values = {
             'mother_id': new_mother_id,
         }
@@ -629,8 +623,6 @@ def clv_person_import_sqlite(
              )
         )
         new_responsible_id = cursor2.fetchone()[0]
-
-        print('>>>>>', row['id'], row['new_id'], row['responsible_id'], new_responsible_id)
 
         values = {
             'responsible_id': new_responsible_id,
