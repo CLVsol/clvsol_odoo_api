@@ -364,8 +364,6 @@ def clv_document_import_sqlite(
         )
         new_base_document_id = cursor2.fetchone()[0]
 
-        print('>>>>>', row['id'], row['new_id'], row['base_document_id'], new_base_document_id)
-
         values = {
             'base_document_id': new_base_document_id,
         }
