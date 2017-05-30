@@ -120,7 +120,6 @@ def res_partner_export_sqlite(client, args, db_path, table_name):
 
 def res_partner_import_sqlite(client, args, db_path, table_name):
 
-    client.context = {'active_test': False}
     res_partner_model = client.model('res.partner')
 
     conn = sqlite3.connect(db_path)
@@ -158,10 +157,20 @@ def res_partner_import_sqlite(client, args, db_path, table_name):
         res_partner_count += 1
 
         print(
-            res_partner_count, row['id'], row['name'].encode('utf-8'), row['email'],
+            res_partner_count, row['id'], row['name'].encode('utf-8'), row['email'], row['active'],
         )
 
-        res_partner_browse = res_partner_model.browse([('name', '=', row['name']), ])
+        res_partner_browse = res_partner_model.browse([('name', '=', row['name']), ('active', '=', True)])
+        if res_partner_browse.id != []:
+            res_partner_id = res_partner_browse.id[0]
+
+        res_partner_browse_2 = res_partner_model.browse([('name', '=', row['name']), ('active', '=', False)])
+        if res_partner_browse_2.id != []:
+            res_partner_browse = res_partner_browse_2
+            res_partner_id = res_partner_browse_2.id[0]
+
+        print('>>>>>', res_partner_browse.id, res_partner_id)
+
         if res_partner_browse.id == []:
 
             values = {
@@ -180,15 +189,15 @@ def res_partner_import_sqlite(client, args, db_path, table_name):
             }
             res_partner_id = res_partner_model.create(values).id
 
-            cursor2.execute(
-                '''
-                UPDATE ''' + table_name + '''
-                SET new_id = ?
-                WHERE id = ?;''',
-                (res_partner_id,
-                 row['id']
-                 )
-            )
+        cursor2.execute(
+            '''
+            UPDATE ''' + table_name + '''
+            SET new_id = ?
+            WHERE id = ?;''',
+            (res_partner_id,
+             row['id']
+             )
+        )
 
     conn.commit()
 

@@ -105,7 +105,6 @@ def clv_document_log_import_sqlite(client, args, db_path, table_name, document_t
     document_log_model = client.model('clv.document.log')
 
     conn = sqlite3.connect(db_path)
-    # conn.text_factory = str
     conn.row_factory = sqlite3.Row
 
     cursor = conn.cursor()
@@ -150,14 +149,7 @@ def clv_document_log_import_sqlite(client, args, db_path, table_name, document_t
                 (document_id,
                  )
             )
-            # try:
-            #     document_id = cursor2.fetchone()[0]
-            # except Exception as e:
-            #     print('>>>>>XXXXX>>>>>', row['document_id'], e)
-            #     document_id = False
             document_id = cursor2.fetchone()[0]
-
-            print('>>>>>', row['document_id'], document_id)
 
         if row['user_id']:
 
@@ -172,9 +164,6 @@ def clv_document_log_import_sqlite(client, args, db_path, table_name, document_t
                  )
             )
             user_id = cursor2.fetchone()[0]
-            if user_id is None:
-                user_id = 1
-            print('>>>>>', row['user_id'], user_id)
 
         if document_id is not False:
             values = {

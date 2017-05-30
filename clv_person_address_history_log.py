@@ -107,7 +107,6 @@ def clv_person_address_history_log_import_sqlite(
     person_address_history_log_model = client.model('clv.person.address.history.log')
 
     conn = sqlite3.connect(db_path)
-    # conn.text_factory = str
     conn.row_factory = sqlite3.Row
 
     cursor = conn.cursor()
@@ -153,7 +152,6 @@ def clv_person_address_history_log_import_sqlite(
                  )
             )
             person_address_id = cursor2.fetchone()[0]
-            print('>>>>>', row['person_address_id'], person_address_id)
 
         if row['user_id']:
 
@@ -170,7 +168,6 @@ def clv_person_address_history_log_import_sqlite(
             user_id = cursor2.fetchone()[0]
             if user_id is None:
                 user_id = 1
-            print('>>>>>', row['user_id'], user_id)
 
         values = {
             'person_address_history_id': person_address_id,

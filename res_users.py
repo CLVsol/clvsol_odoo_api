@@ -169,9 +169,8 @@ def res_users_export_sqlite(client, args, db_path, table_name, conn_string):
     print()
 
 
-def res_users_import_sqlite(client, args, db_path, table_name):
+def res_users_import_sqlite(client, args, db_path, table_name, res_partner_table_name):
 
-    client.context = {'active_test': False}
     res_users_model = client.model('res.users')
 
     conn = sqlite3.connect(db_path)
@@ -205,58 +204,55 @@ def res_users_import_sqlite(client, args, db_path, table_name):
         res_users_count += 1
 
         print(
-            res_users_count, row['id'], row['name'].encode('utf-8'), row['login'],
+            res_users_count, row['id'], row['name'].encode('utf-8'), row['login'], row['active'],
         )
 
-        res_users_browse = res_users_model.browse([('name', '=', row['name']), ])
+        res_users_browse = res_users_model.browse([('name', '=', row['name']), ('active', '=', True)])
+        if res_users_browse.id != []:
+            res_users_id = res_users_browse.id[0]
+
+        res_users_browse_2 = res_users_model.browse([('name', '=', row['name']), ('active', '=', False)])
+        if res_users_browse_2.id != []:
+            res_users_browse = res_users_browse_2
+            res_users_id = res_users_browse_2.id[0]
+
+        print('>>>>>', res_users_browse.id, res_users_id)
+
         if res_users_browse.id == []:
+
+            partner_id = row['partner_id']
+            new_partner_id = False
+            if partner_id is not None:
+                cursor2.execute(
+                    '''
+                    SELECT new_id
+                    FROM ''' + res_partner_table_name + '''
+                    WHERE id = ?;''',
+                    (partner_id,
+                     )
+                )
+                new_partner_id = cursor2.fetchone()[0]
 
             values = {
                 'name': row['name'],
-                'partner_id': row['partner_id'],
+                'partner_id': new_partner_id,
                 'company_id': row['company_id'],
                 'login': row['login'],
                 'password_crypt': row['password_crypt'],
                 'image': row['image'],
-                # 'groups_id': row['groups_id'],
                 'active': row['active'],
             }
             res_users_id = res_users_model.create(values).id
 
-            cursor2.execute(
-                '''
-                UPDATE ''' + table_name + '''
-                SET new_id = ?
-                WHERE id = ?;''',
-                (res_users_id,
-                 row['id']
-                 )
-            )
-
-            # if row['groups_id'] != '[]':
-
-            #     groups_id = row['groups_id'].split(',')
-            #     new_groups_id = []
-            #     for x in range(0, len(groups_id)):
-            #         group_id = int(re.sub('[^0-9]', '', groups_id[x]))
-            #         # cursor2.execute(
-            #         #     '''
-            #         #     SELECT new_id
-            #         #     FROM ''' + group_table_name + '''
-            #         #     WHERE id = ?;''',
-            #         #     (group_id,
-            #         #      )
-            #         # )
-            #         # new_group_id = cursor2.fetchone()[0]
-
-            #         values = {
-            #             'groups_id': [(4, group_id)],
-            #         }
-            #         res_users_model.write(res_users_id, values)
-
-            #         new_groups_id.append(group_id)
-
-            #     print('>>>>>', row[4], new_groups_id)
+        cursor2.execute(
+            '''
+            UPDATE ''' + table_name + '''
+            SET new_id = ?
+            WHERE id = ?;''',
+            (res_users_id,
+             row['id']
+             )
+        )
 
     conn.commit()
     conn.close()

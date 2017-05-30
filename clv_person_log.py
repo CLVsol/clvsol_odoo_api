@@ -105,7 +105,6 @@ def clv_person_log_import_sqlite(client, args, db_path, table_name, person_table
     person_log_model = client.model('clv.person.log')
 
     conn = sqlite3.connect(db_path)
-    # conn.text_factory = str
     conn.row_factory = sqlite3.Row
 
     cursor = conn.cursor()
@@ -151,7 +150,6 @@ def clv_person_log_import_sqlite(client, args, db_path, table_name, person_table
                  )
             )
             person_id = cursor2.fetchone()[0]
-            print('>>>>>', row['person_id'], person_id)
 
         if row['user_id']:
 
@@ -168,7 +166,6 @@ def clv_person_log_import_sqlite(client, args, db_path, table_name, person_table
             user_id = cursor2.fetchone()[0]
             if user_id is None:
                 user_id = 1
-            print('>>>>>', row['user_id'], user_id)
 
         values = {
             'person_id': person_id,
