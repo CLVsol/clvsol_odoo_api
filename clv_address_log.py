@@ -105,7 +105,6 @@ def clv_address_log_import_sqlite(client, args, db_path, table_name, address_tab
     address_log_model = client.model('clv.address.log')
 
     conn = sqlite3.connect(db_path)
-    # conn.text_factory = str
     conn.row_factory = sqlite3.Row
 
     cursor = conn.cursor()
@@ -151,7 +150,6 @@ def clv_address_log_import_sqlite(client, args, db_path, table_name, address_tab
                  )
             )
             address_id = cursor2.fetchone()[0]
-            print('>>>>>', row['address_id'], address_id)
 
         if row['user_id']:
 
@@ -168,7 +166,6 @@ def clv_address_log_import_sqlite(client, args, db_path, table_name, address_tab
             user_id = cursor2.fetchone()[0]
             if user_id is None:
                 user_id = 1
-            print('>>>>>', row['user_id'], user_id)
 
         values = {
             'address_id': address_id,
