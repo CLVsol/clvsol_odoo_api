@@ -50,6 +50,7 @@ def myo_document_export_sqlite(client, args, db_path, table_name):
             user_id,
             state,
             notes,
+            person_id,
             address_id,
             active,
             active_log,
@@ -65,6 +66,8 @@ def myo_document_export_sqlite(client, args, db_path, table_name):
     client.context = {'active_test': False}
     document_model = client.model('myo.document')
     document_browse = document_model.browse(args)
+
+    document_person_model = client.model('myo.document.person')
 
     document_count = 0
     for document_reg in document_browse:
@@ -96,6 +99,15 @@ def myo_document_export_sqlite(client, args, db_path, table_name):
         if document_reg.base_survey_user_input_id:
             base_survey_user_input_id = document_reg.base_survey_user_input_id.id
 
+        person_id = None
+        document_person_browse = document_person_model.browse([('document_id', '=', document_reg.id)])
+        if document_person_browse.id != []:
+            person_id = document_person_browse.person_id.id
+
+        address_id = None
+        if document_reg.address_id:
+            address_id = document_reg.address_id.id
+
         cursor.execute('''
             INSERT INTO ''' + table_name + '''(
                 id,
@@ -110,6 +122,7 @@ def myo_document_export_sqlite(client, args, db_path, table_name):
                 user_id,
                 state,
                 notes,
+                person_id,
                 address_id,
                 active,
                 active_log,
@@ -118,7 +131,7 @@ def myo_document_export_sqlite(client, args, db_path, table_name):
                 survey_user_input_id,
                 base_survey_user_input_id
                 )
-            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             ''', (document_reg.id,
                   str(document_reg.tag_ids.id),
                   str(document_reg.category_ids.id),
@@ -131,7 +144,8 @@ def myo_document_export_sqlite(client, args, db_path, table_name):
                   user_id,
                   document_reg.state,
                   notes,
-                  document_reg.address_id.id,
+                  person_id,
+                  address_id,
                   document_reg.active,
                   document_reg.active_log,
                   base_document_id,
@@ -180,6 +194,7 @@ def clv_document_import_sqlite(
             user_id,
             state,
             notes,
+            person_id,
             address_id,
             active,
             active_log,
@@ -336,6 +351,7 @@ def clv_document_import_sqlite(
             user_id,
             state,
             notes,
+            person_id,
             address_id,
             active,
             active_log,
