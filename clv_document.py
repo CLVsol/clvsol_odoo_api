@@ -102,7 +102,7 @@ def myo_document_export_sqlite(client, args, db_path, table_name):
         person_id = None
         document_person_browse = document_person_model.browse([('document_id', '=', document_reg.id)])
         if document_person_browse.id != []:
-            person_id = document_person_browse.person_id.id
+            person_id = document_person_browse.person_id.id[0]
 
         address_id = None
         if document_reg.address_id:
