@@ -20,6 +20,7 @@
 ###############################################################################
 
 from ir_sequence import *
+from res_country import *
 from res_partner import *
 from res_users import *
 
