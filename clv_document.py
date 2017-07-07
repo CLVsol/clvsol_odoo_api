@@ -164,7 +164,7 @@ def myo_document_export_sqlite(client, args, db_path, table_name):
 
 def clv_document_import_sqlite(
         client, args, db_path, table_name, global_tag_table_name, category_table_name,
-        survey_survey_table_name, res_users_table_name
+        survey_survey_table_name, person_table_name, address_table_name, res_users_table_name
 ):
 
     document_model = client.model('clv.document')
@@ -303,6 +303,37 @@ def clv_document_import_sqlite(
             )
             user_id = cursor2.fetchone()[0]
 
+        person_id = False
+        address_id = False
+        if survey_code == 'QSF17':
+            if row['address_id']:
+
+                address_id = row['address_id']
+
+                cursor2.execute(
+                    '''
+                    SELECT new_id
+                    FROM ''' + address_table_name + '''
+                    WHERE id = ?;''',
+                    (address_id,
+                     )
+                )
+                address_id = cursor2.fetchone()[0]
+        else:
+            if row['person_id']:
+
+                person_id = row['person_id']
+
+                cursor2.execute(
+                    '''
+                    SELECT new_id
+                    FROM ''' + person_table_name + '''
+                    WHERE id = ?;''',
+                    (person_id,
+                     )
+                )
+                person_id = cursor2.fetchone()[0]
+
         values = {
             'global_tag_ids': new_tag_ids,
             'category_ids': new_category_ids,
@@ -322,6 +353,8 @@ def clv_document_import_sqlite(
             'survey_id': survey_survey_id,
             # 'survey_user_input_id': row['survey_user_input_id'],
             # 'base_survey_user_input_id': row['base_survey_user_input_id'],
+            'person_id': person_id,
+            'address_id': address_id,
         }
         document_id = document_model.create(values).id
 
