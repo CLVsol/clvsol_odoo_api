@@ -20,6 +20,9 @@
 ###############################################################################
 
 from ir_sequence import *
+from l10n_br_base_city import *
+from res_country import *
+from res_country_state import *
 from res_partner import *
 from res_users import *
 
