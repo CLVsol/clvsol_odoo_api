@@ -205,3 +205,107 @@ def ir_sequence_import_sqlite(client, args, db_path, table_name, conn_string):
 
     print()
     print('--> ir_sequence_count: ', ir_sequence_count)
+
+
+def ir_sequence_import_sqlite_named(client, args, db_path, table_name, conn_string, input_code, output_code):
+
+    # ir_sequence_model = client.model('ir.sequence')
+
+    conn = sqlite3.connect(db_path)
+    # conn.text_factory = str
+    conn.row_factory = sqlite3.Row
+
+    cursor = conn.cursor()
+
+    data = cursor.execute('''
+        SELECT
+            id,
+            name,
+            implementation,
+            code,
+            active,
+            company_id,
+            prefix,
+            suffix,
+            use_date_range,
+            padding,
+            number_increment,
+            number_next,
+            postgres_last_value,
+            new_id
+        FROM ''' + table_name + ''';
+    ''')
+
+    print(data)
+    print([field[0] for field in cursor.description])
+
+    pg_conn = psycopg2.connect(conn_string)
+    pg_cursor = pg_conn.cursor()
+
+    ir_sequence_model = client.model('ir.sequence')
+
+    ir_sequence_count = 0
+    for row in cursor:
+        ir_sequence_count += 1
+
+        if input_code == row['code']:
+
+            print(
+                ir_sequence_count, row['id'], row['name'], row['implementation'], row['code'],
+                row['prefix'], row['padding'], row['number_increment'], row['number_next'], row['postgres_last_value']
+            )
+
+            ir_sequence_browse = ir_sequence_model.browse(args)
+
+            ir_sequence_count = 0
+            for ir_sequence_reg in ir_sequence_browse:
+                ir_sequence_count += 1
+
+                if ir_sequence_reg.code == output_code:
+
+                    query = "SELECT last_value, increment_by, is_called FROM ir_sequence_%03d" % ir_sequence_reg.id
+                    pg_cursor.execute(query)
+                    row5 = pg_cursor.fetchone()
+                    postgres_last_value = row5[0]
+
+                    print(
+                        ir_sequence_count, ir_sequence_reg.id, ir_sequence_reg.name.encode("utf-8"),
+                        ir_sequence_reg.code,
+                        postgres_last_value,
+                    )
+
+                    my_table = ir_sequence_reg.code[:-5].replace('.', '_')
+                    query2 = "SELECT MAX(id) FROM %s;" % my_table
+                    pg_cursor.execute(query2)
+                    row3 = pg_cursor.fetchone()
+                    max_id = row3[0]
+
+                    print('>>>>>', my_table, row['postgres_last_value'], postgres_last_value, max_id,
+                          ir_sequence_reg.number_next_actual)
+
+                    if postgres_last_value < max_id:
+                        if row['postgres_last_value'] > max_id:
+                            query3 = "SELECT setval('ir_sequence_%03d', %d);" % \
+                                (ir_sequence_reg.id, row['postgres_last_value'])
+                            print('>>>>>>>>>>>>>>>', query3)
+                            pg_cursor.execute(query3)
+                            row4 = pg_cursor.fetchone()
+                            print('>>>>>>>>>>>>>>>', row4[0])
+                        else:
+                            query3 = "SELECT setval('ir_sequence_%03d', %d);" % (ir_sequence_reg.id, max_id)
+                            print('>>>>>>>>>>>>>>>', query3)
+                            pg_cursor.execute(query3)
+                            row4 = pg_cursor.fetchone()
+                            print('>>>>>>>>>>>>>>>', row4[0])
+                    else:
+                        query3 = "SELECT setval('ir_sequence_%03d', %d);" % (ir_sequence_reg.id, postgres_last_value)
+                        print('>>>>>>>>>>>>>>>', query3)
+                        pg_cursor.execute(query3)
+                        row4 = pg_cursor.fetchone()
+                        print('>>>>>>>>>>>>>>>', row4[0])
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> ir_sequence_count: ', ir_sequence_count)
