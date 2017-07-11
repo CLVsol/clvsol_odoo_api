@@ -356,7 +356,7 @@ def clv_person_import_sqlite(
             'name': row['name'],
             # 'alias': row['alias'],
             'code': row['code'],
-            # 'random_field': row['random_field'],
+            'random_field': row['random_field'],
             # 'user_id': row['user_id'],
             'gender': row['gender'],
             'marital': row['marital'],
