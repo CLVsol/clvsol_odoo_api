@@ -200,9 +200,17 @@ def myo_address_export_sqlite(client, args, db_path, table_name):
     print('--> address_count: ', address_count)
 
 
-def clv_address_import_sqlite(client, args, db_path, table_name, global_tag_table_name, category_table_name):
+def clv_address_import_sqlite(
+        client, args, db_path, table_name, global_tag_table_name, category_table_name,
+        res_country_table_name, res_country_state_table_name, l10n_br_base_city_table_name,
+        res_users_table_name
+):
 
     address_model = client.model('clv.address')
+    res_country_model = client.model('res.country')
+    res_country_state_model = client.model('res.country.state')
+    l10n_br_base_city_model = client.model('l10n_br_base.city')
+    hr_employee_model = client.model('hr.employee')
 
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
@@ -313,6 +321,62 @@ def clv_address_import_sqlite(client, args, db_path, table_name, global_tag_tabl
 
                 new_category_ids.append((4, new_category_id))
 
+        new_country_id = False
+        cursor2.execute(
+            '''
+            SELECT name
+            FROM ''' + res_country_table_name + '''
+            WHERE id = ?;''',
+            (row['country_id'],
+             )
+        )
+        country_name = cursor2.fetchone()[0]
+        res_country_browse = res_country_model.browse([('name', '=', country_name), ])
+        new_country_id = res_country_browse.id[0]
+
+        new_state_id = False
+        cursor2.execute(
+            '''
+            SELECT name
+            FROM ''' + res_country_state_table_name + '''
+            WHERE id = ?;''',
+            (row['state_id'],
+             )
+        )
+        country_state_name = cursor2.fetchone()[0]
+        res_country_state_browse = res_country_state_model.browse([('name', '=', country_state_name), ])
+        new_state_id = res_country_state_browse.id[0]
+
+        new_l10n_br_city_id_id = False
+        cursor2.execute(
+            '''
+            SELECT ibge_code
+            FROM ''' + l10n_br_base_city_table_name + '''
+            WHERE id = ?;''',
+            (row['l10n_br_city_id'],
+             )
+        )
+        l10n_br_city_ibge_code = cursor2.fetchone()[0]
+        l10n_br_base_city_browse = l10n_br_base_city_model.browse([('ibge_code', '=', l10n_br_city_ibge_code), ])
+        new_l10n_br_city_id_id = l10n_br_base_city_browse.id[0]
+
+        employee_id = False
+        cursor2.execute(
+            '''
+            SELECT name
+            FROM ''' + res_users_table_name + '''
+            WHERE id = ?;''',
+            (row['user_id'],
+             )
+        )
+        user_name = cursor2.fetchone()
+        print('>>>>>>>>>>', user_name)
+        if user_name is not None:
+            user_name = user_name[0]
+            print('>>>>>>>>>>>>>>>', user_name)
+            hr_employee_browse = hr_employee_model.browse([('name', '=', user_name), ])
+            employee_id = hr_employee_browse.id[0]
+
         values = {
             'global_tag_ids': new_tag_ids,
             'category_ids': new_category_ids,
@@ -320,12 +384,12 @@ def clv_address_import_sqlite(client, args, db_path, table_name, global_tag_tabl
             # 'alias': row['alias'],
             'code': row['code'],
             # 'random_field': row['random_field'],
-            # 'user_id': row['user_id'],
+            'employee_id': employee_id,
             'zip': row['zip'],
-            'country_id': row['country_id'],
-            'state_id': row['state_id'],
+            'country_id': new_country_id,
+            'state_id': new_state_id,
             'city': row['city'],
-            'l10n_br_city_id': row['l10n_br_city_id'],
+            'l10n_br_city_id': new_l10n_br_city_id_id,
             'street': row['street'],
             'number': row['number'],
             'street2': row['street2'],

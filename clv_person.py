@@ -219,10 +219,12 @@ def myo_person_export_sqlite(client, args, db_path, table_name):
 
 
 def clv_person_import_sqlite(
-        client, args, db_path, table_name, global_tag_table_name, category_table_name, address_table_name
+        client, args, db_path, table_name, global_tag_table_name, category_table_name, address_table_name,
+        res_users_table_name
 ):
 
     person_model = client.model('clv.person')
+    hr_employee_model = client.model('hr.employee')
 
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
@@ -350,14 +352,31 @@ def clv_person_import_sqlite(
             )
             address_id = cursor2.fetchone()[0]
 
+        employee_id = False
+        cursor2.execute(
+            '''
+            SELECT name
+            FROM ''' + res_users_table_name + '''
+            WHERE id = ?;''',
+            (row['user_id'],
+             )
+        )
+        user_name = cursor2.fetchone()
+        print('>>>>>>>>>>', user_name)
+        if user_name is not None:
+            user_name = user_name[0]
+            print('>>>>>>>>>>>>>>>', user_name)
+            hr_employee_browse = hr_employee_model.browse([('name', '=', user_name), ])
+            employee_id = hr_employee_browse.id[0]
+
         values = {
             'global_tag_ids': new_tag_ids,
             'category_ids': new_category_ids,
             'name': row['name'],
             # 'alias': row['alias'],
             'code': row['code'],
-            # 'random_field': row['random_field'],
-            # 'user_id': row['user_id'],
+            'random_field': row['random_field'],
+            'employee_id': employee_id,
             'gender': row['gender'],
             'marital': row['marital'],
             'birthday': row['birthday'],
