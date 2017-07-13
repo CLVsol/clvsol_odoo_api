@@ -105,6 +105,8 @@ def clv_person_address_history_log_import_sqlite(
 ):
 
     person_address_history_log_model = client.model('clv.person.address.history.log')
+    person_address_history_log_browse = person_address_history_log_model.browse([])
+    person_address_history_log_browse.unlink()
 
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row

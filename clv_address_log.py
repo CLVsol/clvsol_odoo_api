@@ -103,6 +103,8 @@ def myo_address_log_export_sqlite(client, args, db_path, table_name):
 def clv_address_log_import_sqlite(client, args, db_path, table_name, address_table_name, res_users_table_name):
 
     address_log_model = client.model('clv.address.log')
+    address_log_browse = address_log_model.browse([])
+    address_log_browse.unlink()
 
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
