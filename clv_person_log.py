@@ -103,6 +103,8 @@ def myo_person_log_export_sqlite(client, args, db_path, table_name):
 def clv_person_log_import_sqlite(client, args, db_path, table_name, person_table_name, res_users_table_name):
 
     person_log_model = client.model('clv.person.log')
+    person_log_browse = person_log_model.browse([])
+    person_log_browse.unlink()
 
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
