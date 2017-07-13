@@ -103,6 +103,8 @@ def myo_document_log_export_sqlite(client, args, db_path, table_name):
 def clv_document_log_import_sqlite(client, args, db_path, table_name, document_table_name, res_users_table_name):
 
     document_log_model = client.model('clv.document.log')
+    document_log_browse = document_log_model.browse([])
+    document_log_browse.unlink()
 
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
