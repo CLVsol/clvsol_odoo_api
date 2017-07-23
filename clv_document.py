@@ -24,6 +24,8 @@ from __future__ import print_function
 import sqlite3
 import re
 
+from clv_history_marker import *
+
 
 def myo_document_export_sqlite(client, args, db_path, table_name):
 
@@ -164,8 +166,11 @@ def myo_document_export_sqlite(client, args, db_path, table_name):
 
 def clv_document_import_sqlite(
         client, args, db_path, table_name, global_tag_table_name, category_table_name,
-        survey_survey_table_name, person_table_name, address_table_name, res_users_table_name
+        survey_survey_table_name, person_table_name, address_table_name, res_users_table_name,
+        history_marker_name
 ):
+
+    history_marker_id = clv_history_marker_get_id(client, history_marker_name)
 
     document_model = client.model('clv.document')
     SurveySurvey = client.model('survey.survey')
@@ -358,6 +363,7 @@ def clv_document_import_sqlite(
             # 'base_survey_user_input_id': row['base_survey_user_input_id'],
             'person_id': person_id,
             'address_id': address_id,
+            'history_marker_id': history_marker_id,
         }
         document_id = document_model.create(values).id
 
