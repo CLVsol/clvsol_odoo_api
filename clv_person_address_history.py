@@ -23,10 +23,15 @@ from __future__ import print_function
 
 import sqlite3
 
+from clv_history_marker import *
+
 
 def clv_person_address_history_import_sqlite(
-    client, args, db_path, table_name, global_tag_table_name, role_table_name, person_table_name, address_table_name
+    client, args, db_path, table_name, global_tag_table_name, role_table_name, person_table_name, address_table_name,
+    history_marker_name
 ):
+
+    history_marker_id = clv_history_marker_get_id(client, history_marker_name)
 
     person_address_history_model = client.model('clv.person.address.history')
 
@@ -121,6 +126,7 @@ def clv_person_address_history_import_sqlite(
             'notes': row['notes'],
             'active': row['active'],
             # 'active_log': row['active_log'],
+            'history_marker_id': history_marker_id,
         }
         person_address_history_id = person_address_history_model.create(values).id
 
