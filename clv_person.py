@@ -24,6 +24,8 @@ from __future__ import print_function
 import sqlite3
 import re
 
+from clv_history_marker import *
+
 
 def myo_person_export_sqlite(client, args, db_path, table_name):
 
@@ -220,8 +222,10 @@ def myo_person_export_sqlite(client, args, db_path, table_name):
 
 def clv_person_import_sqlite(
         client, args, db_path, table_name, global_tag_table_name, category_table_name, address_table_name,
-        res_users_table_name
+        res_users_table_name, history_marker_name
 ):
+
+    history_marker_id = clv_history_marker_get_id(client, history_marker_name)
 
     person_model = client.model('clv.person')
     hr_employee_model = client.model('hr.employee')
@@ -399,6 +403,7 @@ def clv_person_import_sqlite(
             # 'is_patient': row['is_patient'],
             'active': row['active'],
             'active_log': row['active_log'],
+            'history_marker_id': history_marker_id,
         }
         person_id = person_model.create(values).id
 
