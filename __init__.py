@@ -35,6 +35,7 @@ from clv_document_log import *
 from clv_document_person import *
 from clv_employee import *
 from clv_global_tag import *
+from clv_history_marker import *
 from clv_mfile import *
 from clv_person import *
 from clv_person_address import *

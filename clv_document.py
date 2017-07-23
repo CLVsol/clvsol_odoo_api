@@ -24,6 +24,8 @@ from __future__ import print_function
 import sqlite3
 import re
 
+from clv_history_marker import *
+
 
 def myo_document_export_sqlite(client, args, db_path, table_name):
 
@@ -164,11 +166,15 @@ def myo_document_export_sqlite(client, args, db_path, table_name):
 
 def clv_document_import_sqlite(
         client, args, db_path, table_name, global_tag_table_name, category_table_name,
-        survey_survey_table_name, person_table_name, address_table_name, res_users_table_name
+        survey_survey_table_name, person_table_name, address_table_name, res_users_table_name,
+        history_marker_name
 ):
+
+    history_marker_id = clv_history_marker_get_id(client, history_marker_name)
 
     document_model = client.model('clv.document')
     SurveySurvey = client.model('survey.survey')
+    hr_employee_model = client.model('hr.employee')
 
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
@@ -288,20 +294,22 @@ def clv_document_import_sqlite(
                 ('code', '=', survey_code),
             ])[0]
 
-        user_id = False
-        if row['user_id']:
-
-            user_id = row['user_id']
-
-            cursor2.execute(
-                '''
-                SELECT new_id
-                FROM ''' + res_users_table_name + '''
-                WHERE id = ?;''',
-                (user_id,
-                 )
-            )
-            user_id = cursor2.fetchone()[0]
+        employee_id = False
+        cursor2.execute(
+            '''
+            SELECT name
+            FROM ''' + res_users_table_name + '''
+            WHERE id = ?;''',
+            (row['user_id'],
+             )
+        )
+        user_name = cursor2.fetchone()
+        print('>>>>>>>>>>', user_name)
+        if user_name is not None:
+            user_name = user_name[0]
+            print('>>>>>>>>>>>>>>>', user_name)
+            hr_employee_browse = hr_employee_model.browse([('name', '=', user_name), ])
+            employee_id = hr_employee_browse.id[0]
 
         person_id = False
         address_id = False
@@ -339,7 +347,7 @@ def clv_document_import_sqlite(
             'category_ids': new_category_ids,
             'name': row['name'],
             'code': row['code'],
-            'user_id': user_id,
+            'employee_id': employee_id,
             'date_requested': row['date_requested'],
             'date_document': row['date_document'],
             'date_foreseen': row['date_foreseen'],
@@ -355,6 +363,7 @@ def clv_document_import_sqlite(
             # 'base_survey_user_input_id': row['base_survey_user_input_id'],
             'person_id': person_id,
             'address_id': address_id,
+            'history_marker_id': history_marker_id,
         }
         document_id = document_model.create(values).id
 

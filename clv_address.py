@@ -24,6 +24,8 @@ from __future__ import print_function
 import sqlite3
 import re
 
+from clv_history_marker import *
+
 
 def myo_address_export_sqlite(client, args, db_path, table_name):
 
@@ -203,8 +205,10 @@ def myo_address_export_sqlite(client, args, db_path, table_name):
 def clv_address_import_sqlite(
         client, args, db_path, table_name, global_tag_table_name, category_table_name,
         res_country_table_name, res_country_state_table_name, l10n_br_base_city_table_name,
-        res_users_table_name
+        res_users_table_name, history_marker_name
 ):
+
+    history_marker_id = clv_history_marker_get_id(client, history_marker_name)
 
     address_model = client.model('clv.address')
     res_country_model = client.model('res.country')
@@ -404,6 +408,7 @@ def clv_address_import_sqlite(
             # 'is_residence': row['is_residence'],
             'active': row['active'],
             'active_log': row['active_log'],
+            'history_marker_id': history_marker_id,
         }
         address_id = address_model.create(values).id
 
