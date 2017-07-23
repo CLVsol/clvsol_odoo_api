@@ -23,6 +23,8 @@ from __future__ import print_function
 
 import sqlite3
 
+from clv_history_marker import *
+
 
 def hr_department_create(client, department_name):
 
@@ -419,8 +421,10 @@ def hr_employee_export_sqlite(client, args, db_path, table_name):
 
 def hr_employee_import_sqlite(
     client, args, db_path, table_name, hr_department_table_name, hr_job_table_name,
-    res_partner_table_name, res_users_table_name
+    res_partner_table_name, res_users_table_name, history_marker_name
 ):
+
+    history_marker_id = clv_history_marker_get_id(client, history_marker_name)
 
     hr_employee_model = client.model('hr.employee')
 
@@ -532,6 +536,7 @@ def hr_employee_import_sqlite(
                 'user_id': new_user_id,
                 'image': row['image'],
                 'active': row['active'],
+                'history_marker_id': history_marker_id,
             }
             hr_employee_id = hr_employee_model.create(values).id
 
