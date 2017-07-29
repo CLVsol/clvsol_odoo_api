@@ -419,6 +419,110 @@ def hr_employee_export_sqlite(client, args, db_path, table_name):
     print()
 
 
+def hr_employee_export_sqlite_10(client, args, db_path, table_name):
+
+    conn = sqlite3.connect(db_path)
+    conn.text_factory = str
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''DROP TABLE ''' + table_name + ''';''')
+    except Exception as e:
+        print('------->', e)
+    cursor.execute(
+        '''
+        CREATE TABLE ''' + table_name + ''' (
+            id INTEGER NOT NULL PRIMARY KEY,
+            resource_id,
+            name,
+            code,
+            work_email,
+            department_id,
+            address_id,
+            job_id,
+            user_id,
+            image,
+            active,
+            new_id INTEGER
+            );
+        '''
+    )
+
+    # client.context = {'active_test': False}
+    employee_model = client.model('hr.employee')
+    employee_browse = employee_model.browse(args)
+
+    employee_count = 0
+    for employee_reg in employee_browse:
+        employee_count += 1
+
+        print(employee_count, employee_reg.id, employee_reg.name.encode("utf-8"))
+
+        code = None
+        if employee_reg.code:
+            code = employee_reg.code
+
+        work_email = None
+        if employee_reg.work_email:
+            work_email = employee_reg.work_email
+
+        department_id = None
+        if employee_reg.department_id:
+            department_id = employee_reg.department_id.id
+
+        job_id = None
+        if employee_reg.job_id:
+            job_id = employee_reg.job_id.id
+
+        address_id = None
+        if employee_reg.address_id:
+            address_id = employee_reg.address_id.id
+
+        user_id = None
+        if employee_reg.user_id:
+            user_id = employee_reg.user_id.id
+
+        image = None
+        if employee_reg.image:
+            image = employee_reg.image
+
+        cursor.execute('''
+            INSERT INTO ''' + table_name + '''(
+                id,
+                resource_id,
+                name,
+                code,
+                work_email,
+                department_id,
+                address_id,
+                job_id,
+                user_id,
+                image,
+                active
+                )
+            VALUES(?,?,?,?,?,?,?,?,?,?,?)
+            ''', (employee_reg.id,
+                  employee_reg.resource_id.id,
+                  employee_reg.name,
+                  code,
+                  work_email,
+                  department_id,
+                  address_id,
+                  job_id,
+                  user_id,
+                  image,
+                  employee_reg.active,
+                  )
+        )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> employee_count: ', employee_count)
+    print()
+
+
 def hr_employee_import_sqlite(
     client, args, db_path, table_name, hr_department_table_name, hr_job_table_name,
     res_partner_table_name, res_users_table_name, history_marker_name

@@ -21,6 +21,8 @@
 
 from __future__ import print_function
 
+import sqlite3
+
 
 def clv_history_marker_get_id(
     client, history_marker_name, history_marker_code=False,
@@ -43,3 +45,72 @@ def clv_history_marker_get_id(
         history_marker_id = history_marker_id[0]
 
     return history_marker_id
+
+
+def clv_history_marker_export_sqlite_10(client, args, db_path, table_name):
+
+    conn = sqlite3.connect(db_path)
+    conn.text_factory = str
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''DROP TABLE ''' + table_name + ''';''')
+    except Exception as e:
+        print('------->', e)
+    cursor.execute('''
+        CREATE TABLE ''' + table_name + ''' (
+            id INTEGER NOT NULL PRIMARY KEY,
+            name,
+            code,
+            description,
+            notes TEXT,
+            new_id INTEGER
+            );
+    ''')
+
+    # client.context = {'active_test': False}
+    clv_history_marker = client.model('clv.history_marker')
+    history_marker_browse = clv_history_marker.browse(args)
+
+    history_marker_count = 0
+    for history_marker in history_marker_browse:
+        history_marker_count += 1
+
+        print(history_marker_count, history_marker.id, history_marker.code, history_marker.name.encode("utf-8"))
+
+        code = None
+        if history_marker.code:
+            code = history_marker.code
+
+        description = None
+        if history_marker.description:
+            description = history_marker.description
+
+        notes = None
+        if history_marker.notes:
+            notes = history_marker.notes
+
+        cursor.execute('''
+                       INSERT INTO ''' + table_name + '''(
+                           id,
+                           name,
+                           code,
+                           description,
+                           notes
+                           )
+                       VALUES(?,?,?,?,?)''',
+                       (history_marker.id,
+                        history_marker.name,
+                        code,
+                        description,
+                        notes,
+                        )
+                       )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> history_marker_count: ', history_marker_count)
+
+

@@ -154,6 +154,81 @@ def clv_tag_export_sqlite(client, args, db_path, table_name):
     print('--> tag_count: ', tag_count)
 
 
+def clv_global_tag_export_sqlite_10(client, args, db_path, table_name):
+
+    conn = sqlite3.connect(db_path)
+    conn.text_factory = str
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''DROP TABLE ''' + table_name + ''';''')
+    except Exception as e:
+        print('------->', e)
+    cursor.execute('''
+        CREATE TABLE ''' + table_name + ''' (
+            id INTEGER NOT NULL PRIMARY KEY,
+            parent_id,
+            name,
+            code,
+            description,
+            notes TEXT,
+            color,
+            new_id INTEGER
+            );
+    ''')
+
+    # client.context = {'active_test': False}
+    clv_global_tag = client.model('clv.global_tag')
+    global_tag_browse = clv_global_tag.browse(args)
+
+    global_tag_count = 0
+    for global_tag in global_tag_browse:
+        global_tag_count += 1
+
+        print(global_tag_count, global_tag.id, global_tag.code, global_tag.name.encode("utf-8"), global_tag.notes)
+
+        code = None
+        if global_tag.code:
+            code = global_tag.code
+
+        description = None
+        if global_tag.description:
+            description = global_tag.description
+
+        notes = None
+        if global_tag.notes:
+            notes = global_tag.notes
+
+        color = None
+        if global_tag.color:
+            color = global_tag.color
+
+        cursor.execute('''
+                       INSERT INTO ''' + table_name + '''(
+                           id,
+                           name,
+                           code,
+                           description,
+                           notes,
+                           color
+                           )
+                       VALUES(?,?,?,?,?,?)''',
+                       (global_tag.id,
+                        global_tag.name,
+                        code,
+                        description,
+                        notes,
+                        color,
+                        )
+                       )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> global_tag_count: ', global_tag_count)
+
+
 def clv_global_tag_import_sqlite(client, args, db_path, table_name):
 
     global_tag_model = client.model('clv.global_tag')
