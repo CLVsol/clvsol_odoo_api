@@ -25,6 +25,32 @@ import sqlite3
 import psycopg2
 
 
+def user_groups_set(client, user_login, group_name_list):
+
+    res_users_model = client.model('res.users')
+    res_groups_model = client.model('res.groups')
+
+    args = [('login', '=', user_login), ]
+    res_users_browse = res_users_model.browse(args)
+    user_id = res_users_browse[0].id
+
+    values = {
+        'groups_id': [(6, 0, [])],
+    }
+    res_users_model.write(user_id, values)
+
+    for group_name in group_name_list:
+
+        args = [('name', '=', group_name), ]
+        res_groups_browse = res_groups_model.browse(args)
+        group_id = res_groups_browse[0].id
+
+        values = {
+            'groups_id': [(4, group_id)],
+        }
+        res_users_model.write(user_id, values)
+
+
 def res_users_create_user(client, company_name, lang, tz, user_name, user_email, user_pw, user_image):
 
     print('Configuring user "' + user_email + '"...')
