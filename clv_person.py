@@ -220,6 +220,202 @@ def myo_person_export_sqlite(client, args, db_path, table_name):
     print('--> person_count: ', person_count)
 
 
+def clv_person_export_sqlite_10(client, args, db_path, table_name):
+
+    conn = sqlite3.connect(db_path)
+    conn.text_factory = str
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''DROP TABLE ''' + table_name + ''';''')
+    except Exception as e:
+        print('------->', e)
+    cursor.execute(
+        '''
+        CREATE TABLE ''' + table_name + ''' (
+            id INTEGER NOT NULL PRIMARY KEY,
+            global_tag_ids,
+            category_ids,
+            name,
+            code,
+            random_field,
+            employee_id,
+            gender,
+            marital,
+            birthday,
+            estimated_age,
+            date_reference,
+            spouse_id,
+            father_id,
+            mother_id,
+            responsible_id,
+            caregiver_id,
+            identification_id,
+            otherid,
+            rg,
+            cpf,
+            country_id,
+            date_inclusion,
+            state,
+            notes,
+            address_id,
+            active,
+            active_log,
+            community_ids,
+            event_ids,
+            new_id INTEGER
+            );
+        '''
+    )
+
+    # client.context = {'active_test': False}
+    person_model = client.model('clv.person')
+    person_browse = person_model.browse(args)
+
+    person_count = 0
+    for person_reg in person_browse:
+        person_count += 1
+
+        print(person_count, person_reg.id, person_reg.code, person_reg.name.encode("utf-8"))
+
+        employee_id = None
+        if person_reg.employee_id:
+            employee_id = person_reg.employee_id.id
+
+        birthday = None
+        if person_reg.birthday:
+            birthday = person_reg.birthday
+
+        estimated_age = None
+        if person_reg.estimated_age:
+            estimated_age = person_reg.estimated_age
+
+        date_reference = None
+        if person_reg.date_reference:
+            date_reference = person_reg.date_reference
+
+        marital = None
+        if person_reg.marital:
+            marital = person_reg.marital
+
+        spouse_id = None
+        if person_reg.spouse_id:
+            spouse_id = person_reg.spouse_id.id
+
+        father_id = None
+        if person_reg.father_id:
+            father_id = person_reg.father_id.id
+
+        mother_id = None
+        if person_reg.mother_id:
+            mother_id = person_reg.mother_id.id
+
+        responsible_id = None
+        if person_reg.responsible_id:
+            responsible_id = person_reg.responsible_id.id
+
+        caregiver_id = None
+        if person_reg.caregiver_id:
+            caregiver_id = person_reg.caregiver_id.id
+
+        identification_id = None
+        if person_reg.identification_id:
+            identification_id = person_reg.identification_id
+
+        otherid = None
+        if person_reg.otherid:
+            otherid = person_reg.otherid
+
+        rg = None
+        if person_reg.rg:
+            rg = person_reg.rg
+
+        cpf = None
+        if person_reg.cpf:
+            cpf = person_reg.cpf
+
+        country_id = None
+        if person_reg.country_id:
+            country_id = person_reg.country_id.id
+
+        notes = None
+        if person_reg.notes:
+            notes = person_reg.notes
+
+        cursor.execute('''
+            INSERT INTO ''' + table_name + '''(
+                id,
+                global_tag_ids,
+                category_ids,
+                name,
+                code,
+                random_field,
+                employee_id,
+                gender,
+                marital,
+                birthday,
+                estimated_age,
+                date_reference,
+                spouse_id,
+                father_id,
+                mother_id,
+                responsible_id,
+                caregiver_id,
+                identification_id,
+                otherid,
+                rg,
+                cpf,
+                country_id,
+                date_inclusion,
+                state,
+                notes,
+                address_id,
+                active,
+                active_log,
+                community_ids,
+                event_ids
+                )
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            ''', (person_reg.id,
+                  str(person_reg.global_tag_ids.id),
+                  str(person_reg.category_ids.id),
+                  person_reg.name,
+                  person_reg.code,
+                  person_reg.random_field,
+                  employee_id,
+                  person_reg.gender,
+                  marital,
+                  birthday,
+                  estimated_age,
+                  date_reference,
+                  spouse_id,
+                  father_id,
+                  mother_id,
+                  responsible_id,
+                  caregiver_id,
+                  identification_id,
+                  otherid,
+                  rg,
+                  cpf,
+                  country_id,
+                  person_reg.date_inclusion,
+                  person_reg.state,
+                  notes,
+                  person_reg.address_id.id,
+                  person_reg.active,
+                  person_reg.active_log,
+                  str(person_reg.community_ids.id),
+                  str(person_reg.event_ids.id),
+                  )
+        )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> person_count: ', person_count)
+
+
 def clv_person_import_sqlite(
         client, args, db_path, table_name, global_tag_table_name, category_table_name, address_table_name,
         res_users_table_name, history_marker_name
