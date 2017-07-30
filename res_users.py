@@ -195,6 +195,91 @@ def res_users_export_sqlite(client, args, db_path, table_name, conn_string):
     print()
 
 
+def res_users_export_sqlite_10(client, args, db_path, table_name, conn_string):
+
+    conn = sqlite3.connect(db_path)
+    conn.text_factory = str
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''DROP TABLE ''' + table_name + ''';''')
+    except Exception as e:
+        print('------->', e)
+    cursor.execute(
+        '''
+        CREATE TABLE ''' + table_name + ''' (
+            id INTEGER NOT NULL PRIMARY KEY,
+            name,
+            partner_id,
+            company_id,
+            login,
+            password_crypt,
+            image,
+            groups_id,
+            active,
+            new_id INTEGER
+            );
+        '''
+    )
+
+    pg_conn = psycopg2.connect(conn_string)
+    pg_cursor = pg_conn.cursor()
+
+    # client.context = {'active_test': False}
+    res_users_model = client.model('res.users')
+    res_users_browse = res_users_model.browse(args)
+
+    res_users_count = 0
+    for res_users_reg in res_users_browse:
+        res_users_count += 1
+
+        print(res_users_count, res_users_reg.id, res_users_reg.name.encode("utf-8"))
+
+        pg_cursor.execute("""
+            SELECT login, password_crypt
+            FROM res_users
+            WHERE login = '""" + res_users_reg.login + """'
+            """)
+
+        row = pg_cursor.fetchone()
+
+        image = None
+        if res_users_reg.image:
+            image = res_users_reg.image
+
+        cursor.execute('''
+            INSERT INTO ''' + table_name + '''(
+                id,
+                name,
+                partner_id,
+                company_id,
+                login,
+                password_crypt,
+                image,
+                groups_id,
+                active
+                )
+            VALUES(?,?,?,?,?,?,?,?,?)
+            ''', (res_users_reg.id,
+                  res_users_reg.name,
+                  res_users_reg.partner_id.id,
+                  res_users_reg.company_id.id,
+                  res_users_reg.login,
+                  row[1],
+                  image,
+                  str(res_users_reg.groups_id.id),
+                  res_users_reg.active,
+                  )
+        )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> res_users_count: ', res_users_count)
+    print()
+
+
 def res_users_import_sqlite(client, args, db_path, table_name, res_partner_table_name):
 
     res_users_model = client.model('res.users')
