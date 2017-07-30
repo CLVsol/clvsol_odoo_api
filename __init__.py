@@ -20,6 +20,7 @@
 ###############################################################################
 
 from hr_employee import *
+from hr_employee_history import *
 from ir_sequence import *
 from l10n_br_base_city import *
 from res_country import *
