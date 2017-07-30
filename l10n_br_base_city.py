@@ -81,3 +81,62 @@ def l10n_br_base_city_export_sqlite(client, args, db_path, table_name):
     print()
     print('--> l10n_br_base_city_count: ', l10n_br_base_city_count)
     print()
+
+
+def l10n_br_base_city_export_sqlite_10(client, args, db_path, table_name):
+
+    conn = sqlite3.connect(db_path)
+    conn.text_factory = str
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''DROP TABLE ''' + table_name + ''';''')
+    except Exception as e:
+        print('------->', e)
+    cursor.execute(
+        '''
+        CREATE TABLE ''' + table_name + ''' (
+            id INTEGER NOT NULL PRIMARY KEY,
+            name,
+            state_id,
+            ibge_code,
+            new_id INTEGER
+            );
+        '''
+    )
+
+    # client.context = {'active_test': False}
+    l10n_br_base_city_model = client.model('l10n_br_base.city')
+    l10n_br_base_city_browse = l10n_br_base_city_model.browse(args)
+
+    l10n_br_base_city_count = 0
+    for l10n_br_base_city_reg in l10n_br_base_city_browse:
+        l10n_br_base_city_count += 1
+
+        print(l10n_br_base_city_count, l10n_br_base_city_reg.id, l10n_br_base_city_reg.name.encode("utf-8"))
+
+        state_id = None
+        if l10n_br_base_city_reg.state_id:
+            state_id = l10n_br_base_city_reg.state_id.id
+
+        cursor.execute('''
+            INSERT INTO ''' + table_name + '''(
+                id,
+                name,
+                state_id,
+                ibge_code
+                )
+            VALUES(?,?,?,?)
+            ''', (l10n_br_base_city_reg.id,
+                  l10n_br_base_city_reg.name,
+                  state_id,
+                  l10n_br_base_city_reg.ibge_code,
+                  )
+        )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> l10n_br_base_city_count: ', l10n_br_base_city_count)
+    print()

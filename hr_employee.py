@@ -91,6 +91,58 @@ def hr_department_export_sqlite(client, args, db_path, table_name):
     print()
 
 
+def hr_department_export_sqlite_10(client, args, db_path, table_name):
+
+    conn = sqlite3.connect(db_path)
+    conn.text_factory = str
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''DROP TABLE ''' + table_name + ''';''')
+    except Exception as e:
+        print('------->', e)
+    cursor.execute(
+        '''
+        CREATE TABLE ''' + table_name + ''' (
+            id INTEGER NOT NULL PRIMARY KEY,
+            name,
+            active,
+            new_id INTEGER
+            );
+        '''
+    )
+
+    # client.context = {'active_test': False}
+    department_model = client.model('hr.department')
+    department_browse = department_model.browse(args)
+
+    department_count = 0
+    for department_reg in department_browse:
+        department_count += 1
+
+        print(department_count, department_reg.id, department_reg.name.encode("utf-8"))
+
+        cursor.execute('''
+            INSERT INTO ''' + table_name + '''(
+                id,
+                name,
+                active
+                )
+            VALUES(?,?,?)
+            ''', (department_reg.id,
+                  department_reg.name,
+                  True,
+                  )
+        )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> department_count: ', department_count)
+    print()
+
+
 def hr_job_export_sqlite(client, args, db_path, table_name):
 
     conn = sqlite3.connect(db_path)
@@ -113,6 +165,58 @@ def hr_job_export_sqlite(client, args, db_path, table_name):
     )
 
     client.context = {'active_test': False}
+    job_model = client.model('hr.job')
+    job_browse = job_model.browse(args)
+
+    job_count = 0
+    for job_reg in job_browse:
+        job_count += 1
+
+        print(job_count, job_reg.id, job_reg.name.encode("utf-8"))
+
+        cursor.execute('''
+            INSERT INTO ''' + table_name + '''(
+                id,
+                name,
+                active
+                )
+            VALUES(?,?,?)
+            ''', (job_reg.id,
+                  job_reg.name,
+                  True,
+                  )
+        )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> job_count: ', job_count)
+    print()
+
+
+def hr_job_export_sqlite_10(client, args, db_path, table_name):
+
+    conn = sqlite3.connect(db_path)
+    conn.text_factory = str
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''DROP TABLE ''' + table_name + ''';''')
+    except Exception as e:
+        print('------->', e)
+    cursor.execute(
+        '''
+        CREATE TABLE ''' + table_name + ''' (
+            id INTEGER NOT NULL PRIMARY KEY,
+            name,
+            active,
+            new_id INTEGER
+            );
+        '''
+    )
+
+    # client.context = {'active_test': False}
     job_model = client.model('hr.job')
     job_browse = job_model.browse(args)
 
@@ -436,6 +540,7 @@ def hr_employee_export_sqlite_10(client, args, db_path, table_name):
             resource_id,
             name,
             code,
+            history_marker_id,
             work_email,
             department_id,
             address_id,
@@ -461,6 +566,10 @@ def hr_employee_export_sqlite_10(client, args, db_path, table_name):
         code = None
         if employee_reg.code:
             code = employee_reg.code
+
+        history_marker_id = None
+        if employee_reg.history_marker_id:
+            history_marker_id = employee_reg.history_marker_id.id
 
         work_email = None
         if employee_reg.work_email:
@@ -492,6 +601,7 @@ def hr_employee_export_sqlite_10(client, args, db_path, table_name):
                 resource_id,
                 name,
                 code,
+                history_marker_id,
                 work_email,
                 department_id,
                 address_id,
@@ -500,11 +610,12 @@ def hr_employee_export_sqlite_10(client, args, db_path, table_name):
                 image,
                 active
                 )
-            VALUES(?,?,?,?,?,?,?,?,?,?,?)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
             ''', (employee_reg.id,
                   employee_reg.resource_id.id,
                   employee_reg.name,
                   code,
+                  history_marker_id,
                   work_email,
                   department_id,
                   address_id,

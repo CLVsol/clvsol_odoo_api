@@ -118,6 +118,104 @@ def res_partner_export_sqlite(client, args, db_path, table_name):
     print()
 
 
+def res_partner_export_sqlite_10(client, args, db_path, table_name):
+
+    conn = sqlite3.connect(db_path)
+    conn.text_factory = str
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''DROP TABLE ''' + table_name + ''';''')
+    except Exception as e:
+        print('------->', e)
+    cursor.execute(
+        '''
+        CREATE TABLE ''' + table_name + ''' (
+            id INTEGER NOT NULL PRIMARY KEY,
+            name,
+            customer,
+            employee,
+            is_company,
+            email,
+            website,
+            parent_id,
+            company_id,
+            tz,
+            lang,
+            image,
+            active,
+            new_id INTEGER
+            );
+        '''
+    )
+
+    # client.context = {'active_test': False}
+    res_partner_model = client.model('res.partner')
+    res_partner_browse = res_partner_model.browse(args)
+
+    res_partner_count = 0
+    for res_partner_reg in res_partner_browse:
+        res_partner_count += 1
+
+        print(res_partner_count, res_partner_reg.id, res_partner_reg.name.encode("utf-8"))
+
+        company_id = None
+        if res_partner_reg.company_id:
+            company_id = res_partner_reg.company_id.id
+
+        parent_id = None
+        if res_partner_reg.parent_id:
+            parent_id = res_partner_reg.parent_id.id
+
+        website = None
+        if res_partner_reg.website:
+            website = res_partner_reg.website
+
+        image = None
+        if res_partner_reg.image:
+            image = res_partner_reg.image
+
+        cursor.execute('''
+            INSERT INTO ''' + table_name + '''(
+                id,
+                name,
+                customer,
+                employee,
+                is_company,
+                email,
+                website,
+                parent_id,
+                company_id,
+                tz,
+                lang,
+                image,
+                active
+                )
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
+            ''', (res_partner_reg.id,
+                  res_partner_reg.name,
+                  res_partner_reg.customer,
+                  res_partner_reg.employee,
+                  res_partner_reg.is_company,
+                  res_partner_reg.email,
+                  website,
+                  parent_id,
+                  company_id,
+                  res_partner_reg.tz,
+                  res_partner_reg.lang,
+                  image,
+                  res_partner_reg.active,
+                  )
+        )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> res_partner_count: ', res_partner_count)
+    print()
+
+
 def res_partner_import_sqlite(client, args, db_path, table_name):
 
     res_partner_model = client.model('res.partner')

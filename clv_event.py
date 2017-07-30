@@ -24,8 +24,6 @@ from __future__ import print_function
 import sqlite3
 import re
 
-from clv_history_marker import *
-
 
 def clv_event_export_sqlite_10(client, args, db_path, table_name):
 
@@ -145,8 +143,7 @@ def clv_event_export_sqlite_10(client, args, db_path, table_name):
                   sequence,
                   history_marker_id,
                   notes,
-                  # event_reg.state,
-                  None,
+                  event_reg.state,
                   event_reg.active,
                   event_reg.active_log,
                   str(event_reg.person_ids.id),
@@ -311,6 +308,10 @@ def clv_event_import_sqlite_10(
 
                 new_person_ids.append((4, new_person_id))
 
+        state = row['state']
+        if state is None:
+            state = 'draft'
+
         values = {
             'global_tag_ids': new_global_tag_ids,
             'category_ids': new_category_ids,
@@ -325,7 +326,7 @@ def clv_event_import_sqlite_10(
             'sequence': row['sequence'],
             'history_marker_id': new_history_marker_id,
             'notes': row['notes'],
-            # 'state': state,
+            'state': state,
             'active': row['active'],
             'active_log': row['active_log'],
             'person_ids': new_person_ids,

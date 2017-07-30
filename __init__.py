@@ -19,6 +19,10 @@
 #
 ###############################################################################
 
+from hr_department_history import *
+from hr_employee import *
+from hr_employee_history import *
+from hr_job_history import *
 from ir_sequence import *
 from l10n_br_base_city import *
 from res_country import *
@@ -33,7 +37,6 @@ from clv_document import *
 from clv_document_category import *
 from clv_document_log import *
 from clv_document_person import *
-from clv_employee import *
 from clv_event import *
 from clv_event_category import *
 from clv_global_tag import *

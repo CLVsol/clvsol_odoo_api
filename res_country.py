@@ -74,3 +74,55 @@ def res_country_export_sqlite(client, args, db_path, table_name):
     print()
     print('--> res_country_count: ', res_country_count)
     print()
+
+
+def res_country_export_sqlite_10(client, args, db_path, table_name):
+
+    conn = sqlite3.connect(db_path)
+    conn.text_factory = str
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''DROP TABLE ''' + table_name + ''';''')
+    except Exception as e:
+        print('------->', e)
+    cursor.execute(
+        '''
+        CREATE TABLE ''' + table_name + ''' (
+            id INTEGER NOT NULL PRIMARY KEY,
+            name,
+            code,
+            new_id INTEGER
+            );
+        '''
+    )
+
+    # client.context = {'active_test': False}
+    res_country_model = client.model('res.country')
+    res_country_browse = res_country_model.browse(args)
+
+    res_country_count = 0
+    for res_country_reg in res_country_browse:
+        res_country_count += 1
+
+        print(res_country_count, res_country_reg.id, res_country_reg.name.encode("utf-8"))
+
+        cursor.execute('''
+            INSERT INTO ''' + table_name + '''(
+                id,
+                name,
+                code
+                )
+            VALUES(?,?,?)
+            ''', (res_country_reg.id,
+                  res_country_reg.name,
+                  res_country_reg.code,
+                  )
+        )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> res_country_count: ', res_country_count)
+    print()
