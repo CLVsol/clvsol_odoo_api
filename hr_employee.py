@@ -419,3 +419,180 @@ def hr_employee_import_sqlite(
 
     print()
     print('--> hr_employee_count: ', hr_employee_count)
+
+
+def hr_employee_import_sqlite_10(
+    client, args, db_path, table_name, hr_department_table_name, hr_job_table_name,
+    res_partner_table_name, res_users_table_name, history_marker_table_name
+):
+
+    hr_employee_model = client.model('hr.employee')
+    res_partner_model = client.model('res.partner')
+    hr_job_model = client.model('hr.job')
+    hr_department_model = client.model('hr.department')
+    res_users_model = client.model('res.users')
+    history_marker_model = client.model('clv.history_marker')
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+
+    cursor = conn.cursor()
+
+    cursor2 = conn.cursor()
+
+    data = cursor.execute('''
+        SELECT
+            id,
+            resource_id,
+            name,
+            code,
+            history_marker_id,
+            work_email,
+            department_id,
+            address_id,
+            job_id,
+            user_id,
+            image,
+            active,
+            new_id
+        FROM ''' + table_name + ''';
+    ''')
+
+    print(data)
+    print([field[0] for field in cursor.description])
+
+    hr_employee_count = 0
+    for row in cursor:
+        hr_employee_count += 1
+
+        print(
+            hr_employee_count, row['id'], row['code'], row['name'].encode('utf-8'),
+        )
+
+        address_id = False
+        cursor2.execute(
+            '''
+            SELECT name
+            FROM ''' + res_partner_table_name + '''
+            WHERE id = ?;''',
+            (row['address_id'],
+             )
+        )
+        partner_name = cursor2.fetchone()
+        if partner_name is not None:
+            partner_name = partner_name[0]
+            res_partner_browse = res_partner_model.browse([('name', '=', partner_name), ])
+            address_id = res_partner_browse.id[0]
+
+        job_id = False
+        cursor2.execute(
+            '''
+            SELECT name
+            FROM ''' + hr_job_table_name + '''
+            WHERE id = ?;''',
+            (row['job_id'],
+             )
+        )
+        job_name = cursor2.fetchone()
+        if job_name is not None:
+            job_name = job_name[0]
+            hr_job_browse = hr_job_model.browse([('name', '=', job_name), ])
+            job_id = hr_job_browse.id[0]
+
+        department_id = False
+        cursor2.execute(
+            '''
+            SELECT name
+            FROM ''' + hr_department_table_name + '''
+            WHERE id = ?;''',
+            (row['department_id'],
+             )
+        )
+        department_name = cursor2.fetchone()
+        if department_name is not None:
+            department_name = department_name[0]
+            hr_department_browse = hr_department_model.browse([('name', '=', department_name), ])
+            department_id = hr_department_browse.id[0]
+
+        user_id = False
+        cursor2.execute(
+            '''
+            SELECT name
+            FROM ''' + res_users_table_name + '''
+            WHERE id = ?;''',
+            (row['user_id'],
+             )
+        )
+        user_name = cursor2.fetchone()
+        if user_name is not None:
+            user_name = user_name[0]
+            res_users_browse = res_users_model.browse([('name', '=', user_name), ])
+            user_id = res_users_browse.id[0]
+
+        history_marker_id = False
+        cursor2.execute(
+            '''
+            SELECT name
+            FROM ''' + history_marker_table_name + '''
+            WHERE id = ?;''',
+            (row['history_marker_id'],
+             )
+        )
+        history_marker_name = cursor2.fetchone()
+        if history_marker_name is not None:
+            history_marker_name = history_marker_name[0]
+            history_marker_browse = history_marker_model.browse([('name', '=', history_marker_name), ])
+            print('>>>>>>>>>>', history_marker_name, history_marker_browse)
+            history_marker_id = history_marker_browse.id[0]
+
+        hr_employee_browse = hr_employee_model.browse([('name', '=', row['name']), ('active', '=', True)])
+        if hr_employee_browse.id != []:
+            hr_employee_id = hr_employee_browse.id[0]
+
+        hr_employee_browse_2 = hr_employee_model.browse([('name', '=', row['name']), ('active', '=', False)])
+        if hr_employee_browse_2.id != []:
+            hr_employee_browse = hr_employee_browse_2
+            hr_employee_id = hr_employee_browse_2.id[0]
+
+        if hr_employee_browse.id == []:
+
+            values = {
+                'name': row['name'],
+                'code': row['code'],
+                'address_id': address_id,
+                'work_email': row['work_email'],
+                'job_id': job_id,
+                'department_id': department_id,
+                'user_id': user_id,
+                'image': row['image'],
+                'active': row['active'],
+                'history_marker_id': history_marker_id,
+            }
+            hr_employee_id = hr_employee_model.create(values).id
+
+        else:
+
+            hr_employee_id = hr_employee_browse.id[0]
+
+            values = {
+                'job_id': job_id,
+                'department_id': department_id,
+                'history_marker_id': history_marker_id,
+            }
+            hr_employee_model.write(hr_employee_id, values)
+
+        cursor2.execute(
+            '''
+            UPDATE ''' + table_name + '''
+            SET new_id = ?
+            WHERE id = ?;''',
+            (hr_employee_id,
+             row['id']
+             )
+        )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> hr_employee_count: ', hr_employee_count)
