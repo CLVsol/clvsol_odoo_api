@@ -577,6 +577,8 @@ def hr_employee_import_sqlite_10(
             values = {
                 'job_id': job_id,
                 'department_id': department_id,
+                'image': row['image'],
+                'active': row['active'],
                 'history_marker_id': history_marker_id,
             }
             hr_employee_model.write(hr_employee_id, values)
