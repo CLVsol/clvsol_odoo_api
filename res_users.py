@@ -376,6 +376,7 @@ def res_users_import_sqlite(client, args, db_path, table_name, res_partner_table
 def res_users_import_sqlite_10(client, args, db_path, table_name, res_partner_table_name):
 
     res_users_model = client.model('res.users')
+    hr_employee_model = client.model('hr.employee')
 
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
@@ -453,26 +454,39 @@ def res_users_import_sqlite_10(client, args, db_path, table_name, res_partner_ta
             }
             res_users_id = res_users_model.create(values).id
 
-        else:
-
-            res_users_id = res_users_browse.id[0]
-
             values = {
-                'password_crypt': row['password_crypt'],
-                'image': row['image'],
-                'active': row['active'],
+                'groups_id': [(6, 0, [])],
             }
             res_users_model.write(res_users_id, values)
 
-        values = {
-            'groups_id': [(6, 0, [])],
-        }
-        res_users_model.write(res_users_id, values)
+            values = {
+                'groups_id': new_groups_id,
+            }
+            res_users_model.write(res_users_id, values)
 
-        values = {
-            'groups_id': new_groups_id,
-        }
-        res_users_model.write(res_users_id, values)
+        else:
+
+            res_users_id = res_users_browse.id[0]
+            hr_employee_browse = hr_employee_model.browse([('user_id', '=', res_users_id), ('active', '=', True)])
+            if hr_employee_browse.id != []:
+                if hr_employee_browse.name[0] != 'Administrator':
+
+                    values = {
+                        'password_crypt': row['password_crypt'],
+                        'image': row['image'],
+                        'active': row['active'],
+                    }
+                    res_users_model.write(res_users_id, values)
+
+                    values = {
+                        'groups_id': [(6, 0, [])],
+                    }
+                    res_users_model.write(res_users_id, values)
+
+                    values = {
+                        'groups_id': new_groups_id,
+                    }
+                    res_users_model.write(res_users_id, values)
 
         cursor2.execute(
             '''
