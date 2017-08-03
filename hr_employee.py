@@ -30,15 +30,15 @@ def employee_create_from_user(client, user_login, job_title, department_name):
 
     print('Configuring employee "' + user_login + '"...')
 
-    employee_model = client.model('res.users')
+    res_users_model = client.model('res.users')
     hr_employee_model = client.model('hr.employee')
     hr_job_model = client.model('hr.job')
     hr_department_model = client.model('hr.department')
 
-    employee_browse = employee_model.browse([('login', '=', user_login), ])
-    user_ids = employee_browse.id
+    res_users_browse = res_users_model.browse([('login', '=', user_login), ])
+    user_id = res_users_browse.id
 
-    if user_ids == []:
+    if user_id == []:
         print('-->  User "' + user_login + '"does not exist!')
     else:
 
