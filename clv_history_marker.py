@@ -64,6 +64,7 @@ def clv_history_marker_export_sqlite_10(client, args, db_path, table_name):
             code,
             description,
             notes TEXT,
+            active,
             new_id INTEGER
             );
     ''')
@@ -96,14 +97,16 @@ def clv_history_marker_export_sqlite_10(client, args, db_path, table_name):
                            name,
                            code,
                            description,
-                           notes
+                           notes,
+                           active
                            )
-                       VALUES(?,?,?,?,?)''',
+                       VALUES(?,?,?,?,?,?)''',
                        (history_marker.id,
                         history_marker.name,
                         code,
                         description,
                         notes,
+                        history_marker.active,
                         )
                        )
 
@@ -114,3 +117,75 @@ def clv_history_marker_export_sqlite_10(client, args, db_path, table_name):
     print('--> history_marker_count: ', history_marker_count)
 
 
+def clv_history_marker_import_sqlite_10(client, args, db_path, table_name):
+
+    history_marker_model = client.model('clv.history_marker')
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+
+    cursor = conn.cursor()
+
+    cursor2 = conn.cursor()
+
+    job_history_count = 0
+
+    data = cursor.execute(
+        '''
+        SELECT
+            id,
+            name,
+            code,
+            description,
+            notes,
+            active,
+            new_id
+        FROM ''' + table_name + ''';
+        '''
+    )
+
+    print(data)
+    print([field[0] for field in cursor.description])
+    for row in cursor:
+        job_history_count += 1
+
+        print(job_history_count, row['id'], row['name'])
+
+        history_marker_browse = history_marker_model.browse([('name', '=', row['name']), ('active', '=', True)])
+        if history_marker_browse.id != []:
+            history_marker_id = history_marker_browse.id[0]
+
+        history_marker_browse_2 = history_marker_model.browse([('name', '=', row['name']), ('active', '=', False)])
+        if history_marker_browse_2.id != []:
+            history_marker_browse = history_marker_browse_2
+            history_marker_id = history_marker_browse_2.id[0]
+
+        if history_marker_browse.id == []:
+
+            values = {
+                'name': row['name'],
+                'code': row['code'],
+                'description': row['description'],
+                'notes': row['notes'],
+            }
+            history_marker_id = history_marker_model.create(values).id
+
+        else:
+
+            history_marker_id = history_marker_browse.id[0]
+
+        cursor2.execute(
+            '''
+           UPDATE ''' + table_name + '''
+           SET new_id = ?
+           WHERE id = ?;''',
+            (history_marker_id,
+             row['id']
+             )
+        )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> job_history_count: ', job_history_count)

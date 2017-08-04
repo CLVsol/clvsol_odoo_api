@@ -19,9 +19,11 @@
 #
 ###############################################################################
 
+from hr_department import *
 from hr_department_history import *
 from hr_employee import *
 from hr_employee_history import *
+from hr_job import *
 from hr_job_history import *
 from ir_sequence import *
 from l10n_br_base_city import *
