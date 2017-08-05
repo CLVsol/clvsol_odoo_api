@@ -66,13 +66,15 @@ def myo_lab_test_type_export_sqlite(client, args, db_path, table_name):
                 id,
                 name,
                 code,
-                criterion_ids
+                criterion_ids,
+                active
                 )
-            VALUES(?,?,?,?)
+            VALUES(?,?,?,?,?)
             ''', (lab_test_type_reg.id,
                   lab_test_type_reg.name,
                   lab_test_type_reg.code,
                   str(lab_test_type_reg.criterion_ids.id),
+                  True,
                   )
         )
 
