@@ -45,6 +45,7 @@ from clv_global_tag import *
 from clv_history_marker import *
 from clv_lab_test_criterion import *
 from clv_lab_test_type import *
+from clv_lab_test_unit import *
 from clv_mfile import *
 from clv_person import *
 from clv_person_address import *
