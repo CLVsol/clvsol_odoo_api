@@ -50,6 +50,7 @@ def myo_lab_test_result_export_sqlite(client, args, db_path, table_name):
             criterion_ids,
             results,
             diagnosis,
+            state,
             active,
             active_log,
             new_id INTEGER
@@ -122,10 +123,11 @@ def myo_lab_test_result_export_sqlite(client, args, db_path, table_name):
                 criterion_ids,
                 results,
                 diagnosis,
+                state,
                 active,
                 active_log
                 )
-            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             ''', (lab_test_result_reg.id,
                   lab_test_result_reg.name,
                   lab_test_type_id,
@@ -139,6 +141,7 @@ def myo_lab_test_result_export_sqlite(client, args, db_path, table_name):
                   str(lab_test_result_reg.criterion_ids.id),
                   results,
                   diagnosis,
+                  lab_test_result_reg.state,
                   lab_test_result_reg.active,
                   lab_test_result_reg.active_log,
                   )

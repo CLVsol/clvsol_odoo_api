@@ -234,7 +234,7 @@ def clv_document_import_sqlite(
             reg_state = 'done'
             state = 'returned'
         if previous_state == 'canceled':
-            reg_state = 'canceled'
+            reg_state = 'cancelled'
             state = 'discarded'
 
         new_tag_ids = False
