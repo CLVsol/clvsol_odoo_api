@@ -134,11 +134,10 @@ def clv_lab_test_request_import_sqlite(
         person_table_name, res_users_table_name, history_marker_name
 ):
 
-    # history_marker_id = clv_history_marker_get_id(client, history_marker_name)
+    history_marker_id = clv_history_marker_get_id(client, history_marker_name)
 
     lab_test_request_model = client.model('clv.lab_test.request')
     lab_test_type_model = client.model('clv.lab_test.type')
-    # hr_employee_model = client.model('hr.employee')
 
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
@@ -175,20 +174,20 @@ def clv_lab_test_request_import_sqlite(
 
         print(lab_test_request_count, row['id'], row['name'])
 
-        patient_id = False
+        person_id = False
         if row['patient_id']:
 
-            patient_id = row['patient_id']
+            person_id = row['patient_id']
 
             cursor2.execute(
                 '''
                 SELECT new_id
                 FROM ''' + person_table_name + '''
                 WHERE id = ?;''',
-                (patient_id,
+                (person_id,
                  )
             )
-            patient_id = cursor2.fetchone()[0]
+            person_id = cursor2.fetchone()[0]
 
         lab_test_type_id = False
         lab_test_type_ids = []
@@ -221,14 +220,13 @@ def clv_lab_test_request_import_sqlite(
 
         values = {
             'code': row['name'],
-            'patient_id': patient_id,
+            'person_id': person_id,
             'date_requested': row['date_requested'],
             'lab_test_type_ids': lab_test_type_ids,
             'state': state,
             'active': row['active'],
             'active_log': True,
-            # 'employee_id': employee_id,
-            # 'history_marker_id': history_marker_id,
+            'history_marker_id': history_marker_id,
         }
         lab_test_request_id = lab_test_request_model.create(values).id
 
