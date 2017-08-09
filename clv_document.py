@@ -174,7 +174,6 @@ def clv_document_import_sqlite(
 
     document_model = client.model('clv.document')
     SurveySurvey = client.model('survey.survey')
-    hr_employee_model = client.model('hr.employee')
 
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
@@ -294,23 +293,6 @@ def clv_document_import_sqlite(
                 ('code', '=', survey_code),
             ])[0]
 
-        employee_id = False
-        cursor2.execute(
-            '''
-            SELECT name
-            FROM ''' + res_users_table_name + '''
-            WHERE id = ?;''',
-            (row['user_id'],
-             )
-        )
-        user_name = cursor2.fetchone()
-        print('>>>>>>>>>>', user_name)
-        if user_name is not None:
-            user_name = user_name[0]
-            print('>>>>>>>>>>>>>>>', user_name)
-            hr_employee_browse = hr_employee_model.browse([('name', '=', user_name), ])
-            employee_id = hr_employee_browse.id[0]
-
         person_id = False
         address_id = False
         if survey_code == 'QSF17':
@@ -347,7 +329,6 @@ def clv_document_import_sqlite(
             'category_ids': new_category_ids,
             'name': row['name'],
             'code': row['code'],
-            'employee_id': employee_id,
             'date_requested': row['date_requested'],
             'date_document': row['date_document'],
             'date_foreseen': row['date_foreseen'],
