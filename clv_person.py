@@ -576,7 +576,7 @@ def clv_person_import_sqlite(
             # 'alias': row['alias'],
             'code': row['code'],
             'random_field': row['random_field'],
-            'employee_id': employee_id,
+            # 'employee_id': employee_id,
             'gender': row['gender'],
             'marital': row['marital'],
             'birthday': row['birthday'],
@@ -601,7 +601,8 @@ def clv_person_import_sqlite(
             'active_log': row['active_log'],
             'history_marker_id': history_marker_id,
         }
-        person_id = person_model.create(values).id
+        person = person_model.create(values)
+        person_id = person.id
 
         cursor2.execute(
             '''
@@ -612,6 +613,15 @@ def clv_person_import_sqlite(
              row['id']
              )
         )
+
+        if person.address_id.employee_id is not False:
+            if (employee_id is not False) and (person.address_id.employee_id.id != employee_id):
+                notes = 'Address Employee: ' + person.address_id.employee_id.name + '\n'
+                notes = notes + 'Person Employee:' + hr_employee_browse.name[0] + '\n'
+                values = {
+                    'notes': notes,
+                }
+                person_model.write(person_id, values)
 
     conn.commit()
 
