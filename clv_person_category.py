@@ -100,6 +100,82 @@ def myo_person_category_export_sqlite(client, args, db_path, table_name):
     print('--> person_category_count: ', person_category_count)
 
 
+def clv_person_category_export_sqlite_10(client, args, db_path, table_name):
+
+    conn = sqlite3.connect(db_path)
+    conn.text_factory = str
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''DROP TABLE ''' + table_name + ''';''')
+    except Exception as e:
+        print('------->', e)
+    cursor.execute('''
+        CREATE TABLE ''' + table_name + ''' (
+            id INTEGER NOT NULL PRIMARY KEY,
+            parent_id,
+            name,
+            code,
+            description,
+            notes,
+            color,
+            new_id INTEGER
+            );
+    ''')
+
+    # client.context = {'active_test': False}
+    person_category = client.model('clv.person.category')
+    person_category_browse = person_category.browse(args)
+
+    person_category_count = 0
+    for person_category in person_category_browse:
+        person_category_count += 1
+
+        print(
+            person_category_count, person_category.id, person_category.code,
+            person_category.name.encode("utf-8"), person_category.notes
+        )
+
+        parent_id = None
+        if person_category.parent_id:
+            parent_id = person_category.parent_id.id
+
+        notes = None
+        if person_category.notes:
+            notes = person_category.notes
+
+        color = None
+        if person_category.color:
+            color = person_category.color
+
+        cursor.execute('''
+                       INSERT INTO ''' + table_name + '''(
+                           id,
+                           parent_id,
+                           name,
+                           code,
+                           description,
+                           notes,
+                           color
+                           )
+                       VALUES(?,?,?,?,?,?,?)''',
+                       (person_category.id,
+                        parent_id,
+                        person_category.name,
+                        person_category.code,
+                        person_category.description,
+                        notes,
+                        color
+                        )
+                       )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> person_category_count: ', person_category_count)
+
+
 def clv_person_category_import_sqlite(client, args, db_path, table_name):
 
     person_category_model = client.model('clv.person.category')
