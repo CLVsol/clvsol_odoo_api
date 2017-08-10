@@ -256,9 +256,12 @@ def clv_person_export_sqlite_10(client, args, db_path, table_name):
             cpf,
             country_id,
             date_inclusion,
+            reg_state,
             state,
+            history_marker_id,
             notes,
             address_id,
+            person_address_role_id,
             active,
             active_log,
             community_ids,
@@ -338,9 +341,17 @@ def clv_person_export_sqlite_10(client, args, db_path, table_name):
         if person_reg.country_id:
             country_id = person_reg.country_id.id
 
+        history_marker_id = None
+        if person_reg.history_marker_id:
+            history_marker_id = person_reg.history_marker_id.id
+
         notes = None
         if person_reg.notes:
             notes = person_reg.notes
+
+        person_address_role_id = None
+        if person_reg.person_address_role_id:
+            person_address_role_id = person_reg.person_address_role_id.id
 
         cursor.execute('''
             INSERT INTO ''' + table_name + '''(
@@ -367,15 +378,18 @@ def clv_person_export_sqlite_10(client, args, db_path, table_name):
                 cpf,
                 country_id,
                 date_inclusion,
+                reg_state,
                 state,
+                history_marker_id,
                 notes,
                 address_id,
+                person_address_role_id,
                 active,
                 active_log,
                 community_ids,
                 event_ids
                 )
-            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             ''', (person_reg.id,
                   str(person_reg.global_tag_ids.id),
                   str(person_reg.category_ids.id),
@@ -399,9 +413,12 @@ def clv_person_export_sqlite_10(client, args, db_path, table_name):
                   cpf,
                   country_id,
                   person_reg.date_inclusion,
+                  person_reg.reg_state,
                   person_reg.state,
+                  history_marker_id,
                   notes,
                   person_reg.address_id.id,
+                  person_address_role_id,
                   person_reg.active,
                   person_reg.active_log,
                   str(person_reg.community_ids.id),
