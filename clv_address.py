@@ -202,6 +202,171 @@ def myo_address_export_sqlite(client, args, db_path, table_name):
     print('--> address_count: ', address_count)
 
 
+def clv_address_export_sqlite_10(client, args, db_path, table_name):
+
+    conn = sqlite3.connect(db_path)
+    conn.text_factory = str
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''DROP TABLE ''' + table_name + ''';''')
+    except Exception as e:
+        print('------->', e)
+    cursor.execute(
+        '''
+        CREATE TABLE ''' + table_name + ''' (
+            id INTEGER NOT NULL PRIMARY KEY,
+            global_tag_ids,
+            category_ids,
+            name,
+            code,
+            employee_id,
+            zip,
+            country_id,
+            state_id,
+            city,
+            l10n_br_city_id,
+            street,
+            number,
+            street2,
+            district,
+            phone,
+            mobile,
+            fax,
+            email,
+            reg_state,
+            state,
+            history_marker_id,
+            notes,
+            active,
+            active_log,
+            new_id INTEGER
+            );
+        '''
+    )
+
+    # client.context = {'active_test': False}
+    address_model = client.model('clv.address')
+    address_browse = address_model.browse(args)
+
+    address_count = 0
+    for address_reg in address_browse:
+        address_count += 1
+
+        print(address_count, address_reg.id, address_reg.code, address_reg.name.encode("utf-8"))
+
+        employee_id = None
+        if address_reg.employee_id:
+            employee_id = address_reg.employee_id.id
+
+        city = None
+        if address_reg.city:
+            city = address_reg.city
+
+        street = None
+        if address_reg.street:
+            street = address_reg.street
+
+        number = None
+        if address_reg.number:
+            number = address_reg.number
+
+        street2 = None
+        if address_reg.street2:
+            street2 = address_reg.street2
+
+        district = None
+        if address_reg.district:
+            district = address_reg.district
+
+        phone = None
+        if address_reg.phone:
+            phone = address_reg.phone
+
+        mobile = None
+        if address_reg.mobile:
+            mobile = address_reg.mobile
+
+        fax = None
+        if address_reg.fax:
+            fax = address_reg.fax
+
+        email = None
+        if address_reg.email:
+            email = address_reg.email
+
+        history_marker_id = None
+        if address_reg.history_marker_id:
+            history_marker_id = address_reg.history_marker_id.id
+
+        notes = None
+        if address_reg.notes:
+            notes = address_reg.notes
+
+        cursor.execute('''
+            INSERT INTO ''' + table_name + '''(
+                id,
+                global_tag_ids,
+                category_ids,
+                name,
+                code,
+                employee_id,
+                zip,
+                country_id,
+                state_id,
+                city,
+                l10n_br_city_id,
+                street,
+                number,
+                street2,
+                district,
+                phone,
+                mobile,
+                fax,
+                email,
+                reg_state,
+                state,
+                history_marker_id,
+                notes,
+                active,
+                active_log
+                )
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            ''', (address_reg.id,
+                  str(address_reg.global_tag_ids.id),
+                  str(address_reg.category_ids.id),
+                  address_reg.name,
+                  address_reg.code,
+                  employee_id,
+                  address_reg.zip,
+                  address_reg.country_id.id,
+                  address_reg.state_id.id,
+                  city,
+                  address_reg.l10n_br_city_id.id,
+                  street,
+                  number,
+                  street2,
+                  district,
+                  phone,
+                  mobile,
+                  fax,
+                  email,
+                  address_reg.reg_state,
+                  address_reg.state,
+                  history_marker_id,
+                  notes,
+                  address_reg.active,
+                  address_reg.active_log,
+                  )
+        )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> address_count: ', address_count)
+
+
 def clv_address_import_sqlite(
         client, args, db_path, table_name, global_tag_table_name, category_table_name,
         res_country_table_name, res_country_state_table_name, l10n_br_base_city_table_name,
