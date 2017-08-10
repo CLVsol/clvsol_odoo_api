@@ -350,8 +350,8 @@ def clv_event_import_sqlite_10(
             values = {
                 'global_tag_ids': new_global_tag_ids,
                 'category_ids': new_category_ids,
-                # 'name': row['name'],
-                'code': row['code'],
+                'name': row['name'],
+                # 'code': row['code'],
                 'employee_id': employee_id,
                 'planned_hours': row['planned_hours'],
                 'date_inclusion': row['date_inclusion'],
@@ -364,7 +364,7 @@ def clv_event_import_sqlite_10(
                 'state': state,
                 'active': row['active'],
                 'active_log': row['active_log'],
-                # 'person_ids': new_person_ids,
+                'person_ids': new_person_ids,
             }
             event_model.write(event_id, values)
 
