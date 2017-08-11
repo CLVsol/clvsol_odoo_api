@@ -98,3 +98,129 @@ def clv_event_log_export_sqlite_10(client, args, db_path, table_name):
 
     print()
     print('--> event_log_count: ', event_log_count)
+
+
+def clv_event_log_import_sqlite_10(client, args, db_path, table_name, event_table_name, res_users_table_name):
+
+    event_log_model = client.model('clv.event.log')
+    event_log_browse = event_log_model.browse([])
+    event_log_browse.unlink()
+
+    event_model = client.model('clv.event')
+    res_users_model = client.model('res.users')
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+
+    cursor = conn.cursor()
+    cursor2 = conn.cursor()
+
+    data = cursor.execute('''
+        SELECT
+            id,
+            event_id,
+            user_id,
+            date_log,
+            values_,
+            action,
+            notes,
+            new_id
+        FROM ''' + table_name + '''
+        ORDER BY id;
+    ''')
+
+    print(data)
+    print([field[0] for field in cursor.description])
+
+    event_log_count = 0
+    for row in cursor:
+        event_log_count += 1
+
+        print(
+            event_log_count, row['id'], row['event_id'], row['user_id'], row['date_log'],
+            row['values_'], row['action'], row['notes']
+        )
+
+        event_id = False
+        if row['event_id']:
+            cursor2.execute(
+                '''
+                SELECT code
+                FROM ''' + event_table_name + '''
+                WHERE id = ?;''',
+                (row['event_id'],
+                 )
+            )
+            event_code = cursor2.fetchone()[0]
+            event_browse = event_model.browse([('code', '=', event_code), ])
+            event_id = event_browse.id[0]
+
+        # if row['event_id']:
+
+        #     event_id = row['event_id']
+
+        #     cursor2.execute(
+        #         '''
+        #         SELECT new_id
+        #         FROM ''' + event_table_name + '''
+        #         WHERE id = ?;''',
+        #         (event_id,
+        #          )
+        #     )
+        #     event_id = cursor2.fetchone()[0]
+
+        user_id = False
+        if row['user_id']:
+            cursor2.execute(
+                '''
+                SELECT login
+                FROM ''' + res_users_table_name + '''
+                WHERE id = ?;''',
+                (row['user_id'],
+                 )
+            )
+            user_login = cursor2.fetchone()[0]
+            res_users_browse = res_users_model.browse([('login', '=', user_login), ])
+            user_id = res_users_browse.id[0]
+
+        # if row['user_id']:
+
+        #     user_id = row['user_id']
+
+        #     cursor2.execute(
+        #         '''
+        #         SELECT new_id
+        #         FROM ''' + res_users_table_name + '''
+        #         WHERE id = ?;''',
+        #         (user_id,
+        #          )
+        #     )
+        #     user_id = cursor2.fetchone()[0]
+        #     if user_id is None:
+        #         user_id = 1
+
+        values = {
+            'event_id': event_id,
+            'user_id': user_id,
+            'date_log': row['date_log'],
+            'values': row['values_'],
+            'action': row['action'],
+            'notes': row['notes'],
+        }
+        event_log_id = event_log_model.create(values).id
+
+        cursor2.execute(
+            '''
+            UPDATE ''' + table_name + '''
+            SET new_id = ?
+            WHERE id = ?;''',
+            (event_log_id,
+             row['id']
+             )
+        )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> event_log_count: ', event_log_count)
