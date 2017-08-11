@@ -174,7 +174,6 @@ def clv_event_import_sqlite_10(
     conn.row_factory = sqlite3.Row
 
     cursor = conn.cursor()
-
     cursor2 = conn.cursor()
 
     event_count = 0
@@ -312,26 +311,62 @@ def clv_event_import_sqlite_10(
         if state is None:
             state = 'draft'
 
-        values = {
-            'global_tag_ids': new_global_tag_ids,
-            'category_ids': new_category_ids,
-            'name': row['name'],
-            'code': row['code'],
-            'employee_id': employee_id,
-            'planned_hours': row['planned_hours'],
-            'date_inclusion': row['date_inclusion'],
-            'date_foreseen': row['date_foreseen'],
-            'date_start': row['date_start'],
-            'date_deadline': row['date_deadline'],
-            'sequence': row['sequence'],
-            'history_marker_id': new_history_marker_id,
-            'notes': row['notes'],
-            'state': state,
-            'active': row['active'],
-            'active_log': row['active_log'],
-            'person_ids': new_person_ids,
-        }
-        event_id = event_model.create(values).id
+        event_browse = event_model.browse([('code', '=', row['code']), ('active', '=', True)])
+        if event_browse.id != []:
+            event_id = event_browse.id[0]
+
+        event_browse_2 = event_model.browse([('code', '=', row['code']), ('active', '=', False)])
+        if event_browse_2.id != []:
+            event_browse = event_browse_2
+            event_id = event_browse_2.id[0]
+
+        if event_browse.id == []:
+
+            values = {
+                'global_tag_ids': new_global_tag_ids,
+                'category_ids': new_category_ids,
+                'name': row['name'],
+                'code': row['code'],
+                'employee_id': employee_id,
+                'planned_hours': row['planned_hours'],
+                'date_inclusion': row['date_inclusion'],
+                'date_foreseen': row['date_foreseen'],
+                'date_start': row['date_start'],
+                'date_deadline': row['date_deadline'],
+                'sequence': row['sequence'],
+                'history_marker_id': new_history_marker_id,
+                'notes': row['notes'],
+                'state': state,
+                'active': row['active'],
+                'active_log': row['active_log'],
+                'person_ids': new_person_ids,
+            }
+            event_id = event_model.create(values).id
+
+        else:
+
+            event_id = event_browse.id[0]
+
+            values = {
+                'global_tag_ids': new_global_tag_ids,
+                'category_ids': new_category_ids,
+                'name': row['name'],
+                # 'code': row['code'],
+                'employee_id': employee_id,
+                'planned_hours': row['planned_hours'],
+                'date_inclusion': row['date_inclusion'],
+                'date_foreseen': row['date_foreseen'],
+                'date_start': row['date_start'],
+                'date_deadline': row['date_deadline'],
+                'sequence': row['sequence'],
+                'history_marker_id': new_history_marker_id,
+                'notes': row['notes'],
+                'state': state,
+                'active': row['active'],
+                'active_log': row['active_log'],
+                'person_ids': new_person_ids,
+            }
+            event_model.write(event_id, values)
 
         cursor2.execute(
             '''

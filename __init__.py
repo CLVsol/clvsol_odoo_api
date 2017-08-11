@@ -23,6 +23,7 @@ from hr_department import *
 from hr_department_history import *
 from hr_employee import *
 from hr_employee_history import *
+from hr_employee_log import *
 from hr_job import *
 from hr_job_history import *
 from ir_sequence import *
@@ -41,6 +42,7 @@ from clv_document_log import *
 from clv_document_person import *
 from clv_event import *
 from clv_event_category import *
+from clv_event_log import *
 from clv_global_tag import *
 from clv_history_marker import *
 from clv_lab_test_criterion import *

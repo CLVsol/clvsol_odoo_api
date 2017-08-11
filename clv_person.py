@@ -256,9 +256,12 @@ def clv_person_export_sqlite_10(client, args, db_path, table_name):
             cpf,
             country_id,
             date_inclusion,
+            reg_state,
             state,
+            history_marker_id,
             notes,
             address_id,
+            person_address_role_id,
             active,
             active_log,
             community_ids,
@@ -338,9 +341,17 @@ def clv_person_export_sqlite_10(client, args, db_path, table_name):
         if person_reg.country_id:
             country_id = person_reg.country_id.id
 
+        history_marker_id = None
+        if person_reg.history_marker_id:
+            history_marker_id = person_reg.history_marker_id.id
+
         notes = None
         if person_reg.notes:
             notes = person_reg.notes
+
+        person_address_role_id = None
+        if person_reg.person_address_role_id:
+            person_address_role_id = person_reg.person_address_role_id.id
 
         cursor.execute('''
             INSERT INTO ''' + table_name + '''(
@@ -367,15 +378,18 @@ def clv_person_export_sqlite_10(client, args, db_path, table_name):
                 cpf,
                 country_id,
                 date_inclusion,
+                reg_state,
                 state,
+                history_marker_id,
                 notes,
                 address_id,
+                person_address_role_id,
                 active,
                 active_log,
                 community_ids,
                 event_ids
                 )
-            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             ''', (person_reg.id,
                   str(person_reg.global_tag_ids.id),
                   str(person_reg.category_ids.id),
@@ -399,9 +413,12 @@ def clv_person_export_sqlite_10(client, args, db_path, table_name):
                   cpf,
                   country_id,
                   person_reg.date_inclusion,
+                  person_reg.reg_state,
                   person_reg.state,
+                  history_marker_id,
                   notes,
                   person_reg.address_id.id,
+                  person_address_role_id,
                   person_reg.active,
                   person_reg.active_log,
                   str(person_reg.community_ids.id),
@@ -865,3 +882,447 @@ def clv_person_import_sqlite(
     print()
     print('--> person_count: ', person_count)
     print('--> person_count_2: ', person_count_2)
+
+
+def clv_person_import_sqlite_10(
+        client, args, db_path, table_name, global_tag_table_name, category_table_name, address_table_name,
+        history_marker_table_name
+):
+
+    person_model = client.model('clv.person')
+    global_tag_model = client.model('clv.global_tag')
+    category_model = client.model('clv.person.category')
+    address_model = client.model('clv.address')
+    history_marker_model = client.model('clv.history_marker')
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+
+    cursor = conn.cursor()
+    cursor2 = conn.cursor()
+
+    person_count = 0
+
+    data = cursor.execute(
+        '''
+        SELECT
+            id,
+            global_tag_ids,
+            category_ids,
+            name,
+            code,
+            random_field,
+            employee_id,
+            gender,
+            marital,
+            birthday,
+            estimated_age,
+            date_reference,
+            spouse_id,
+            father_id,
+            mother_id,
+            responsible_id,
+            caregiver_id,
+            identification_id,
+            otherid,
+            rg,
+            cpf,
+            country_id,
+            date_inclusion,
+            reg_state,
+            state,
+            history_marker_id,
+            notes,
+            address_id,
+            active,
+            active_log,
+            community_ids,
+            event_ids,
+            new_id
+        FROM ''' + table_name + ''';
+        '''
+    )
+
+    print(data)
+    print([field[0] for field in cursor.description])
+    for row in cursor:
+        person_count += 1
+
+        print(person_count, row['id'], row['name'].encode('utf-8'), row['code'])
+
+        reg_state = row['reg_state']
+        if reg_state is None:
+            reg_state = 'draft'
+
+        state = row['state']
+        if state is None:
+            state = 'new'
+
+        new_global_tag_ids = False
+        if row['global_tag_ids'] != '[]':
+
+            global_tag_ids = row['global_tag_ids'].split(',')
+            new_global_tag_ids = []
+            for x in range(0, len(global_tag_ids)):
+                tag_id = int(re.sub('[^0-9]', '', global_tag_ids[x]))
+                cursor2.execute(
+                    '''
+                    SELECT name
+                    FROM ''' + global_tag_table_name + '''
+                    WHERE id = ?;''',
+                    (tag_id,
+                     )
+                )
+                global_tag_name = cursor2.fetchone()
+                if global_tag_name is not None:
+                    global_tag_name = global_tag_name[0]
+                    global_tag_browse = global_tag_model.browse([('name', '=', global_tag_name), ])
+                    new_global_tag_id = global_tag_browse.id[0]
+
+                    new_global_tag_ids.append((4, new_global_tag_id))
+
+        new_category_ids = False
+        if row['category_ids'] != '[]':
+
+            category_ids = row['category_ids'].split(',')
+            new_category_ids = []
+            for x in range(0, len(category_ids)):
+                category_id = int(re.sub('[^0-9]', '', category_ids[x]))
+                cursor2.execute(
+                    '''
+                    SELECT name
+                    FROM ''' + category_table_name + '''
+                    WHERE id = ?;''',
+                    (category_id,
+                     )
+                )
+                category_name = cursor2.fetchone()
+                if category_name is not None:
+                    category_name = category_name[0]
+                    category_browse = category_model.browse([('name', '=', category_name), ])
+                    new_category_id = category_browse.id[0]
+
+                new_category_ids.append((4, new_category_id))
+
+        address_id = False
+        if row['address_id']:
+            cursor2.execute(
+                '''
+                SELECT code
+                FROM ''' + address_table_name + '''
+                WHERE id = ?;''',
+                (row['address_id'],
+                 )
+            )
+            address_code = cursor2.fetchone()
+            if address_code is not None:
+                address_code = address_code[0]
+                address_browse = address_model.browse([('code', '=', address_code), ])
+                address_id = address_browse.id[0]
+
+        reg_state = row['reg_state']
+        if reg_state is None:
+            reg_state = 'draft'
+
+        state = row['state']
+        if state is None:
+            state = 'new'
+
+        new_history_marker_id = False
+        if row['history_marker_id']:
+            cursor2.execute(
+                '''
+                SELECT name
+                FROM ''' + history_marker_table_name + '''
+                WHERE id = ?;''',
+                (row['history_marker_id'],
+                 )
+            )
+            history_marker_name = cursor2.fetchone()[0]
+            history_marker_browse = history_marker_model.browse([('name', '=', history_marker_name), ])
+            new_history_marker_id = history_marker_browse.id[0]
+
+        person_browse = person_model.browse([('code', '=', row['code']), ('active', '=', True)])
+        if person_browse.id != []:
+            person_id = person_browse.id[0]
+
+        person_browse_2 = person_model.browse([('code', '=', row['code']), ('active', '=', False)])
+        if person_browse_2.id != []:
+            person_browse = person_browse_2
+            person_id = person_browse_2.id[0]
+
+        if person_browse.id == []:
+
+            values = {
+                'global_tag_ids': new_global_tag_ids,
+                'category_ids': new_category_ids,
+                'name': row['name'],
+                'code': row['code'],
+                'random_field': row['random_field'],
+                'gender': row['gender'],
+                'marital': row['marital'],
+                'birthday': row['birthday'],
+                'estimated_age': row['estimated_age'],
+                'date_reference': row['date_reference'],
+                'identification_id': row['identification_id'],
+                'otherid': row['otherid'],
+                # 'rg': row['rg'],
+                # 'cpf': row['cpf'],
+                # 'country_id': row['country_id'],
+                'date_inclusion': row['date_inclusion'],
+                'reg_state': reg_state,
+                'state': state,
+                'notes': row['notes'],
+                'address_id': address_id,
+                'active': row['active'],
+                'active_log': row['active_log'],
+                'history_marker_id': new_history_marker_id,
+            }
+            person = person_model.create(values)
+            person_id = person.id
+
+        else:
+
+            person_id = person_browse.id[0]
+
+            values = {
+                'global_tag_ids': [(5)],
+                'category_ids': [(5)],
+            }
+            person_model.write(person_id, values)
+
+            values = {
+                'global_tag_ids': new_global_tag_ids,
+                'category_ids': new_category_ids,
+                'name': row['name'],
+                # 'code': row['code'],
+                'random_field': row['random_field'],
+                'gender': row['gender'],
+                'marital': row['marital'],
+                'birthday': row['birthday'],
+                'estimated_age': row['estimated_age'],
+                'date_reference': row['date_reference'],
+                'identification_id': row['identification_id'],
+                'otherid': row['otherid'],
+                # 'rg': row['rg'],
+                # 'cpf': row['cpf'],
+                # 'country_id': row['country_id'],
+                'date_inclusion': row['date_inclusion'],
+                'reg_state': reg_state,
+                'state': state,
+                'notes': row['notes'],
+                'address_id': address_id,
+                'active': row['active'],
+                'active_log': row['active_log'],
+                'history_marker_id': new_history_marker_id,
+            }
+            person_model.write(person_id, values)
+
+        cursor2.execute(
+            '''
+           UPDATE ''' + table_name + '''
+           SET new_id = ?
+           WHERE id = ?;''',
+            (person_id,
+             row['id']
+             )
+        )
+
+    conn.commit()
+
+    data = cursor.execute('''
+        SELECT
+            id,
+            name,
+            code,
+            spouse_id,
+            new_id
+        FROM ''' + table_name + '''
+        WHERE spouse_id IS NOT NULL;
+    ''')
+
+    person_count_2 = 0
+    for row in cursor:
+        person_count_2 += 1
+
+        print(person_count_2, row['id'], row['name'].encode('utf-8'), row['code'], row['spouse_id'])
+
+        cursor2.execute(
+            '''
+            SELECT new_id
+            FROM ''' + table_name + '''
+            WHERE id = ?;''',
+            (row['spouse_id'],
+             )
+        )
+        new_spouse_id = cursor2.fetchone()[0]
+
+        person_browse_3 = person_model.browse([('code', '=', row['code']), ])
+
+        if person_browse_3.spouse_id:
+            if person_browse_3.spouse_id.id == new_spouse_id:
+                values = {
+                    'spouse_id': new_spouse_id,
+                }
+                person_model.write(row['new_id'], values)
+
+    conn.commit()
+
+    data = cursor.execute('''
+        SELECT
+            id,
+            name,
+            code,
+            father_id,
+            new_id
+        FROM ''' + table_name + '''
+        WHERE father_id IS NOT NULL;
+    ''')
+
+    person_count_3 = 0
+    for row in cursor:
+        person_count_3 += 1
+
+        print(person_count_3, row['id'], row['name'].encode('utf-8'), row['code'], row['father_id'])
+
+        cursor2.execute(
+            '''
+            SELECT new_id
+            FROM ''' + table_name + '''
+            WHERE id = ?;''',
+            (row['father_id'],
+             )
+        )
+        new_father_id = cursor2.fetchone()[0]
+
+        person_browse_3 = person_model.browse([('code', '=', row['code']), ])
+
+        if person_browse_3.father_id:
+            if person_browse_3.father_id.id == new_father_id:
+                values = {
+                    'father_id': new_father_id,
+                }
+                person_model.write(row['new_id'], values)
+
+    conn.commit()
+
+    data = cursor.execute('''
+        SELECT
+            id,
+            name,
+            code,
+            mother_id,
+            new_id
+        FROM ''' + table_name + '''
+        WHERE mother_id IS NOT NULL;
+    ''')
+
+    person_count_4 = 0
+    for row in cursor:
+        person_count_4 += 1
+
+        print(person_count_4, row['id'], row['name'].encode('utf-8'), row['code'], row['mother_id'])
+
+        cursor2.execute(
+            '''
+            SELECT new_id
+            FROM ''' + table_name + '''
+            WHERE id = ?;''',
+            (row['mother_id'],
+             )
+        )
+        new_mother_id = cursor2.fetchone()[0]
+
+        person_browse_3 = person_model.browse([('code', '=', row['code']), ])
+
+        if person_browse_3.mother_id:
+            if person_browse_3.mother_id.id == new_mother_id:
+                values = {
+                    'mother_id': new_mother_id,
+                }
+                person_model.write(row['new_id'], values)
+
+    conn.commit()
+
+    data = cursor.execute('''
+        SELECT
+            id,
+            name,
+            code,
+            responsible_id,
+            new_id
+        FROM ''' + table_name + '''
+        WHERE responsible_id IS NOT NULL;
+    ''')
+
+    person_count_5 = 0
+    for row in cursor:
+        person_count_5 += 1
+
+        print(person_count_5, row['id'], row['name'].encode('utf-8'), row['code'], row['responsible_id'])
+
+        cursor2.execute(
+            '''
+            SELECT new_id
+            FROM ''' + table_name + '''
+            WHERE id = ?;''',
+            (row['responsible_id'],
+             )
+        )
+        new_responsible_id = cursor2.fetchone()[0]
+
+        person_browse_3 = person_model.browse([('code', '=', row['code']), ])
+
+        if person_browse_3.responsible_id:
+            if person_browse_3.responsible_id.id == new_responsible_id:
+                values = {
+                    'responsible_id': new_responsible_id,
+                }
+                person_model.write(row['new_id'], values)
+
+    data = cursor.execute('''
+        SELECT
+            id,
+            name,
+            code,
+            caregiver_id,
+            new_id
+        FROM ''' + table_name + '''
+        WHERE caregiver_id IS NOT NULL;
+    ''')
+
+    person_count_6 = 0
+    for row in cursor:
+        person_count_6 += 1
+
+        print(person_count_6, row['id'], row['name'].encode('utf-8'), row['code'], row['caregiver_id'])
+
+        cursor2.execute(
+            '''
+            SELECT new_id
+            FROM ''' + table_name + '''
+            WHERE id = ?;''',
+            (row['caregiver_id'],
+             )
+        )
+        new_caregiver_id = cursor2.fetchone()[0]
+
+        person_browse_3 = person_model.browse([('code', '=', row['code']), ])
+
+        if person_browse_3.caregiver_id:
+            if person_browse_3.caregiver_id.id == new_caregiver_id:
+                values = {
+                    'caregiver_id': new_caregiver_id,
+                }
+                person_model.write(row['new_id'], values)
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> person_count: ', person_count)
+    print('--> person_count_2: ', person_count_2)
+    print('--> person_count_2: ', person_count_3)
+    print('--> person_count_2: ', person_count_4)
+    print('--> person_count_2: ', person_count_5)
+    print('--> person_count_2: ', person_count_6)
