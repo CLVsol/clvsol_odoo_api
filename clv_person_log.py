@@ -270,3 +270,129 @@ def clv_person_log_import_sqlite(client, args, db_path, table_name, person_table
 
     print()
     print('--> person_log_count: ', person_log_count)
+
+
+def clv_person_log_import_sqlite_10(client, args, db_path, table_name, person_table_name, res_users_table_name):
+
+    person_log_model = client.model('clv.person.log')
+    person_log_browse = person_log_model.browse([])
+    person_log_browse.unlink()
+
+    person_model = client.model('clv.person')
+    res_users_model = client.model('res.users')
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+
+    cursor = conn.cursor()
+    cursor2 = conn.cursor()
+
+    data = cursor.execute('''
+        SELECT
+            id,
+            person_id,
+            user_id,
+            date_log,
+            values_,
+            action,
+            notes,
+            new_id
+        FROM ''' + table_name + '''
+        ORDER BY id;
+    ''')
+
+    print(data)
+    print([field[0] for field in cursor.description])
+
+    person_log_count = 0
+    for row in cursor:
+        person_log_count += 1
+
+        print(
+            person_log_count, row['id'], row['person_id'], row['user_id'], row['date_log'],
+            row['values_'], row['action'], row['notes']
+        )
+
+        person_id = False
+        if row['person_id']:
+            cursor2.execute(
+                '''
+                SELECT code
+                FROM ''' + person_table_name + '''
+                WHERE id = ?;''',
+                (row['person_id'],
+                 )
+            )
+            person_code = cursor2.fetchone()[0]
+            person_browse = person_model.browse([('code', '=', person_code), ])
+            person_id = person_browse.id[0]
+
+        # if row['person_id']:
+
+        #     person_id = row['person_id']
+
+        #     cursor2.execute(
+        #         '''
+        #         SELECT new_id
+        #         FROM ''' + person_table_name + '''
+        #         WHERE id = ?;''',
+        #         (person_id,
+        #          )
+        #     )
+        #     person_id = cursor2.fetchone()[0]
+
+        user_id = False
+        if row['user_id']:
+            cursor2.execute(
+                '''
+                SELECT login
+                FROM ''' + res_users_table_name + '''
+                WHERE id = ?;''',
+                (row['user_id'],
+                 )
+            )
+            user_login = cursor2.fetchone()[0]
+            res_users_browse = res_users_model.browse([('login', '=', user_login), ])
+            user_id = res_users_browse.id[0]
+
+        # if row['user_id']:
+
+        #     user_id = row['user_id']
+
+        #     cursor2.execute(
+        #         '''
+        #         SELECT new_id
+        #         FROM ''' + res_users_table_name + '''
+        #         WHERE id = ?;''',
+        #         (user_id,
+        #          )
+        #     )
+        #     user_id = cursor2.fetchone()[0]
+        #     if user_id is None:
+        #         user_id = 1
+
+        values = {
+            'person_id': person_id,
+            'user_id': user_id,
+            'date_log': row['date_log'],
+            'values': row['values_'],
+            'action': row['action'],
+            'notes': row['notes'],
+        }
+        person_log_id = person_log_model.create(values).id
+
+        cursor2.execute(
+            '''
+            UPDATE ''' + table_name + '''
+            SET new_id = ?
+            WHERE id = ?;''',
+            (person_log_id,
+             row['id']
+             )
+        )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> person_log_count: ', person_log_count)
