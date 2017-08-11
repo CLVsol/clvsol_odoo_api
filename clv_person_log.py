@@ -100,6 +100,82 @@ def myo_person_log_export_sqlite(client, args, db_path, table_name):
     print('--> person_log_count: ', person_log_count)
 
 
+def clv_person_log_export_sqlite_10(client, args, db_path, table_name):
+
+    conn = sqlite3.connect(db_path)
+    conn.text_factory = str
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''DROP TABLE ''' + table_name + ''';''')
+    except Exception as e:
+        print('------->', e)
+    cursor.execute('''
+        CREATE TABLE ''' + table_name + ''' (
+            id INTEGER NOT NULL PRIMARY KEY,
+            person_id,
+            user_id,
+            date_log,
+            values_,
+            action,
+            notes,
+            new_id INTEGER
+            );
+    ''')
+
+    # client.context = {'active_test': False}
+    person_log = client.model('clv.person.log')
+    person_log_browse = person_log.browse(args)
+
+    person_log_count = 0
+    for person_log in person_log_browse:
+        person_log_count += 1
+
+        print(
+            person_log_count, person_log.id, person_log.values,
+            person_log.date_log, person_log.notes
+        )
+
+        person_id = None
+        if person_log.person_id:
+            person_id = person_log.person_id.id
+
+        user_id = None
+        if person_log.user_id:
+            user_id = person_log.user_id.id
+
+        notes = None
+        if person_log.notes:
+            notes = person_log.notes
+
+        cursor.execute('''
+                       INSERT INTO ''' + table_name + '''(
+                           id,
+                           person_id,
+                           user_id,
+                           date_log,
+                           values_,
+                           action,
+                           notes
+                           )
+                       VALUES(?,?,?,?,?,?,?)''',
+                       (person_log.id,
+                        person_id,
+                        user_id,
+                        person_log.date_log,
+                        person_log.values,
+                        person_log.action,
+                        notes
+                        )
+                       )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> person_log_count: ', person_log_count)
+
+
 def clv_person_log_import_sqlite(client, args, db_path, table_name, person_table_name, res_users_table_name):
 
     person_log_model = client.model('clv.person.log')
