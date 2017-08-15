@@ -1086,8 +1086,8 @@ def clv_person_import_sqlite_10(
             person_id = person_browse.id[0]
 
             values = {
-                'global_tag_ids': [(5)],
-                'category_ids': [(5)],
+                'global_tag_ids': [(5,), ],
+                'category_ids': [(5,), ],
             }
             person_model.write(person_id, values)
 
