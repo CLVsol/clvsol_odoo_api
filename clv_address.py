@@ -592,3 +592,283 @@ def clv_address_import_sqlite(
 
     print()
     print('--> address_count: ', address_count)
+
+
+def clv_address_import_sqlite_10(
+        client, args, db_path, table_name, global_tag_table_name, category_table_name,
+        res_country_table_name, res_country_state_table_name, l10n_br_base_city_table_name,
+        hr_employee_table_name, history_marker_table_name
+):
+
+    address_model = client.model('clv.address')
+    global_tag_model = client.model('clv.global_tag')
+    category_model = client.model('clv.address.category')
+    res_country_model = client.model('res.country')
+    res_country_state_model = client.model('res.country.state')
+    l10n_br_base_city_model = client.model('l10n_br_base.city')
+    hr_employee_model = client.model('hr.employee')
+    history_marker_model = client.model('clv.history_marker')
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+
+    cursor = conn.cursor()
+    cursor2 = conn.cursor()
+
+    address_count = 0
+
+    data = cursor.execute(
+        '''
+        SELECT
+            id,
+            global_tag_ids,
+            category_ids,
+            name,
+            code,
+            employee_id,
+            zip,
+            country_id,
+            state_id,
+            city,
+            l10n_br_city_id,
+            street,
+            number,
+            street2,
+            district,
+            phone,
+            mobile,
+            fax,
+            email,
+            reg_state,
+            state,
+            history_marker_id,
+            notes,
+            active,
+            active_log,
+            new_id
+        FROM ''' + table_name + ''';
+        '''
+    )
+
+    print(data)
+    print([field[0] for field in cursor.description])
+    for row in cursor:
+        address_count += 1
+
+        print(address_count, row['id'], row['name'].encode('utf-8'), row['code'])
+
+        new_global_tag_ids = False
+        if row['global_tag_ids'] != '[]':
+
+            global_tag_ids = row['global_tag_ids'].split(',')
+            new_global_tag_ids = []
+            for x in range(0, len(global_tag_ids)):
+                tag_id = int(re.sub('[^0-9]', '', global_tag_ids[x]))
+                cursor2.execute(
+                    '''
+                    SELECT name
+                    FROM ''' + global_tag_table_name + '''
+                    WHERE id = ?;''',
+                    (tag_id,
+                     )
+                )
+                global_tag_name = cursor2.fetchone()
+                if global_tag_name is not None:
+                    global_tag_name = global_tag_name[0]
+                    global_tag_browse = global_tag_model.browse([('name', '=', global_tag_name), ])
+                    new_global_tag_id = global_tag_browse.id[0]
+
+                    new_global_tag_ids.append((4, new_global_tag_id))
+
+        new_category_ids = False
+        if row['category_ids'] != '[]':
+
+            category_ids = row['category_ids'].split(',')
+            new_category_ids = []
+            for x in range(0, len(category_ids)):
+                category_id = int(re.sub('[^0-9]', '', category_ids[x]))
+                cursor2.execute(
+                    '''
+                    SELECT name
+                    FROM ''' + category_table_name + '''
+                    WHERE id = ?;''',
+                    (category_id,
+                     )
+                )
+                category_name = cursor2.fetchone()
+                if category_name is not None:
+                    category_name = category_name[0]
+                    category_browse = category_model.browse([('name', '=', category_name), ])
+                    new_category_id = category_browse.id[0]
+
+                new_category_ids.append((4, new_category_id))
+
+        new_country_id = False
+        cursor2.execute(
+            '''
+            SELECT name
+            FROM ''' + res_country_table_name + '''
+            WHERE id = ?;''',
+            (row['country_id'],
+             )
+        )
+        country_name = cursor2.fetchone()[0]
+        res_country_browse = res_country_model.browse([('name', '=', country_name), ])
+        new_country_id = res_country_browse.id[0]
+
+        new_state_id = False
+        cursor2.execute(
+            '''
+            SELECT name
+            FROM ''' + res_country_state_table_name + '''
+            WHERE id = ?;''',
+            (row['state_id'],
+             )
+        )
+        country_state_name = cursor2.fetchone()[0]
+        res_country_state_browse = res_country_state_model.browse([('name', '=', country_state_name), ])
+        new_state_id = res_country_state_browse.id[0]
+
+        new_l10n_br_city_id_id = False
+        cursor2.execute(
+            '''
+            SELECT ibge_code
+            FROM ''' + l10n_br_base_city_table_name + '''
+            WHERE id = ?;''',
+            (row['l10n_br_city_id'],
+             )
+        )
+        l10n_br_city_ibge_code = cursor2.fetchone()[0]
+        l10n_br_base_city_browse = l10n_br_base_city_model.browse([('ibge_code', '=', l10n_br_city_ibge_code), ])
+        new_l10n_br_city_id_id = l10n_br_base_city_browse.id[0]
+
+        employee_id = False
+        cursor2.execute(
+            '''
+            SELECT code
+            FROM ''' + hr_employee_table_name + '''
+            WHERE id = ?;''',
+            (row['employee_id'],
+             )
+        )
+        employee_code = cursor2.fetchone()
+        if employee_code is not None:
+            employee_code = employee_code[0]
+            hr_employee_browse = hr_employee_model.browse([('code', '=', employee_code), ])
+            employee_id = hr_employee_browse.id[0]
+
+        reg_state = row['reg_state']
+        if reg_state is None:
+            reg_state = 'draft'
+
+        state = row['state']
+        if state is None:
+            state = 'new'
+
+        new_history_marker_id = False
+        if row['history_marker_id']:
+            cursor2.execute(
+                '''
+                SELECT name
+                FROM ''' + history_marker_table_name + '''
+                WHERE id = ?;''',
+                (row['history_marker_id'],
+                 )
+            )
+            history_marker_name = cursor2.fetchone()[0]
+            history_marker_browse = history_marker_model.browse([('name', '=', history_marker_name), ])
+            new_history_marker_id = history_marker_browse.id[0]
+
+        address_browse = address_model.browse([('code', '=', row['code']), ('active', '=', True)])
+        if address_browse.id != []:
+            address_id = address_browse.id[0]
+
+        address_browse_2 = address_model.browse([('code', '=', row['code']), ('active', '=', False)])
+        if address_browse_2.id != []:
+            address_browse = address_browse_2
+            address_id = address_browse_2.id[0]
+
+        if address_browse.id == []:
+
+            values = {
+                'global_tag_ids': new_global_tag_ids,
+                'category_ids': new_category_ids,
+                'name': row['name'],
+                # 'code': row['code'],
+                'employee_id': employee_id,
+                'zip': row['zip'],
+                'country_id': new_country_id,
+                'state_id': new_state_id,
+                'city': row['city'],
+                'l10n_br_city_id': new_l10n_br_city_id_id,
+                'street': row['street'],
+                'number': row['number'],
+                'street2': row['street2'],
+                'district': row['district'],
+                'phone': row['phone'],
+                'mobile': row['mobile'],
+                'fax': row['fax'],
+                'email': row['email'],
+                'reg_state': reg_state,
+                'state': state,
+                'notes': row['notes'],
+                'active': row['active'],
+                'active_log': row['active_log'],
+                'history_marker_id': new_history_marker_id,
+            }
+            address = address_model.create(values)
+            address_id = address.id
+
+        else:
+
+            address_id = address_browse.id[0]
+
+            values = {
+                'global_tag_ids': [(5,), ],
+                'category_ids': [(5,), ],
+            }
+            address_model.write(address_id, values)
+
+            values = {
+                'global_tag_ids': new_global_tag_ids,
+                'category_ids': new_category_ids,
+                'name': row['name'],
+                'code': row['code'],
+                'employee_id': employee_id,
+                'zip': row['zip'],
+                'country_id': new_country_id,
+                'state_id': new_state_id,
+                'city': row['city'],
+                'l10n_br_city_id': new_l10n_br_city_id_id,
+                'street': row['street'],
+                'number': row['number'],
+                'street2': row['street2'],
+                'district': row['district'],
+                'phone': row['phone'],
+                'mobile': row['mobile'],
+                'fax': row['fax'],
+                'email': row['email'],
+                'reg_state': reg_state,
+                'state': state,
+                'notes': row['notes'],
+                'active': row['active'],
+                'active_log': row['active_log'],
+                'history_marker_id': new_history_marker_id,
+            }
+            address_model.write(address_id, values)
+
+        cursor2.execute(
+            '''
+           UPDATE ''' + table_name + '''
+           SET new_id = ?
+           WHERE id = ?;''',
+            (address_id,
+             row['id']
+             )
+        )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> address_count: ', address_count)

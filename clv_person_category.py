@@ -140,6 +140,14 @@ def clv_person_category_export_sqlite_10(client, args, db_path, table_name):
         if person_category.parent_id:
             parent_id = person_category.parent_id.id
 
+        code = None
+        if person_category.code:
+            code = person_category.code
+
+        description = None
+        if person_category.description:
+            description = person_category.description
+
         notes = None
         if person_category.notes:
             notes = person_category.notes
@@ -162,8 +170,8 @@ def clv_person_category_export_sqlite_10(client, args, db_path, table_name):
                        (person_category.id,
                         parent_id,
                         person_category.name,
-                        person_category.code,
-                        person_category.description,
+                        code,
+                        description,
                         notes,
                         color
                         )

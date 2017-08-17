@@ -272,16 +272,16 @@ def clv_event_import_sqlite_10(
         employee_id = False
         cursor2.execute(
             '''
-            SELECT name
+            SELECT code
             FROM ''' + hr_employee_table_name + '''
             WHERE id = ?;''',
             (row['employee_id'],
              )
         )
-        user_name = cursor2.fetchone()
-        if user_name is not None:
-            user_name = user_name[0]
-            hr_employee_browse = hr_employee_model.browse([('name', '=', user_name), ])
+        employee_code = cursor2.fetchone()
+        if employee_code is not None:
+            employee_code = employee_code[0]
+            hr_employee_browse = hr_employee_model.browse([('code', '=', employee_code), ])
             employee_id = hr_employee_browse.id[0]
 
         new_person_ids = False
@@ -294,15 +294,15 @@ def clv_event_import_sqlite_10(
 
                 cursor2.execute(
                     '''
-                    SELECT name
+                    SELECT code
                     FROM ''' + person_table_name + '''
                     WHERE id = ?;''',
                     (person_id,
                      )
                 )
-                person_name = cursor2.fetchone()[0]
+                person_code = cursor2.fetchone()[0]
 
-                person_browse = person_model.browse([('name', '=', person_name), ])
+                person_browse = person_model.browse([('code', '=', person_code), ])
                 new_person_id = person_browse.id[0]
 
                 new_person_ids.append((4, new_person_id))
