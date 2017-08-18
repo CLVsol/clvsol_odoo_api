@@ -35,6 +35,7 @@ from res_users import *
 
 from clv_address import *
 from clv_address_category import *
+from clv_address_history import *
 from clv_address_log import *
 from clv_document import *
 from clv_document_category import *
