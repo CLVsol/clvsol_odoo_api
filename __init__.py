@@ -23,6 +23,7 @@ from hr_department import *
 from hr_department_history import *
 from hr_employee import *
 from hr_employee_history import *
+from hr_employee_history_log import *
 from hr_employee_log import *
 from hr_job import *
 from hr_job_history import *
