@@ -23,6 +23,7 @@ from hr_department import *
 from hr_department_history import *
 from hr_employee import *
 from hr_employee_history import *
+from hr_employee_history_log import *
 from hr_employee_log import *
 from hr_job import *
 from hr_job_history import *
@@ -35,6 +36,8 @@ from res_users import *
 
 from clv_address import *
 from clv_address_category import *
+from clv_address_history import *
+from clv_address_history_log import *
 from clv_address_log import *
 from clv_document import *
 from clv_document_category import *
@@ -57,5 +60,7 @@ from clv_person_address_history import *
 from clv_person_address_history_log import *
 from clv_person_address_role import *
 from clv_person_category import *
+from clv_person_history import *
+from clv_person_history_log import *
 from clv_person_log import *
 from clv_survey import *

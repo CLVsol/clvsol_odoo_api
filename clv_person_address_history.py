@@ -170,3 +170,97 @@ def clv_person_address_history_import_sqlite(
 
     print()
     print('--> person_count: ', person_count)
+
+
+def clv_person_address_history_export_sqlite_10(client, args, db_path, table_name):
+
+    conn = sqlite3.connect(db_path)
+    conn.text_factory = str
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''DROP TABLE ''' + table_name + ''';''')
+    except Exception as e:
+        print('------->', e)
+    cursor.execute(
+        '''
+        CREATE TABLE ''' + table_name + ''' (
+            id INTEGER NOT NULL PRIMARY KEY,
+            person_id,
+            global_tag_ids,
+            sign_in_date,
+            sign_out_date,
+            address_id,
+            role_id,
+            history_marker_id,
+            active,
+            new_id INTEGER
+            );
+        '''
+    )
+
+    # client.context = {'active_test': False}
+    person_address_history_model = client.model('clv.person.address.history')
+    person_address_history_browse = person_address_history_model.browse(args)
+
+    person_address_history_count = 0
+    for person_address_history_reg in person_address_history_browse:
+        person_address_history_count += 1
+
+        print(person_address_history_count, person_address_history_reg.id,
+              person_address_history_reg.person_id.name.encode("utf-8"))
+
+        person_id = None
+        if person_address_history_reg.person_id:
+            person_id = person_address_history_reg.person_id.id
+
+        sign_in_date = None
+        if person_address_history_reg.sign_in_date:
+            sign_in_date = person_address_history_reg.sign_in_date
+
+        sign_out_date = None
+        if person_address_history_reg.sign_out_date:
+            sign_out_date = person_address_history_reg.sign_out_date
+
+        address_id = None
+        if person_address_history_reg.address_id:
+            address_id = person_address_history_reg.address_id.id
+
+        role_id = None
+        if person_address_history_reg.role_id:
+            role_id = person_address_history_reg.role_id.id
+
+        history_marker_id = None
+        if person_address_history_reg.history_marker_id:
+            history_marker_id = person_address_history_reg.history_marker_id.id
+
+        cursor.execute('''
+            INSERT INTO ''' + table_name + '''(
+                id,
+                person_id,
+                global_tag_ids,
+                sign_in_date,
+                sign_out_date,
+                address_id,
+                role_id,
+                history_marker_id,
+                active
+                )
+            VALUES(?,?,?,?,?,?,?,?,?)
+            ''', (person_address_history_reg.id,
+                  person_id,
+                  str(person_address_history_reg.global_tag_ids.id),
+                  sign_in_date,
+                  sign_out_date,
+                  address_id,
+                  role_id,
+                  history_marker_id,
+                  person_address_history_reg.active,
+                  )
+        )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> person_address_history_count: ', person_address_history_count)
