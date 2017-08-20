@@ -58,5 +58,6 @@ from clv_person_address_history import *
 from clv_person_address_history_log import *
 from clv_person_address_role import *
 from clv_person_category import *
+from clv_person_history import *
 from clv_person_log import *
 from clv_survey import *
