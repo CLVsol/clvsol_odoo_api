@@ -124,7 +124,6 @@ def clv_address_history_import_sqlite_10(
 
     address_history_model = client.model('clv.address.history')
 
-    history_marker_model = client.model('clv.history_marker')
     clv_address_model = client.model('clv.address')
     category_model = client.model('clv.address.category')
     hr_employee_model = client.model('hr.employee')
