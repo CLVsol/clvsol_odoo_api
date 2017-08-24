@@ -886,7 +886,7 @@ def clv_person_import_sqlite(
 
 def clv_person_import_sqlite_10(
         client, args, db_path, table_name, global_tag_table_name, category_table_name, address_table_name,
-        history_marker_table_name
+        history_marker_table_name, person_address_role_table_name
 ):
 
     person_model = client.model('clv.person')
@@ -934,6 +934,7 @@ def clv_person_import_sqlite_10(
             history_marker_id,
             notes,
             address_id,
+            person_address_role_id,
             active,
             active_log,
             community_ids,
@@ -1020,6 +1021,22 @@ def clv_person_import_sqlite_10(
                 address_browse = address_model.browse([('code', '=', address_code), ])
                 address_id = address_browse.id[0]
 
+        person_address_role_id = False
+        cursor2.execute(
+            '''
+            SELECT name
+            FROM ''' + person_address_role_table_name + '''
+            WHERE id = ?;''',
+            (row['person_address_role_id'],
+             )
+        )
+        person_address_role_name = cursor2.fetchone()
+        if person_address_role_code is not None:
+            person_address_role_name = person_address_role_name[0]
+            clv_person_address_role_browse = \
+                person_address_role_model.browse([('code', '=', person_address_role_name), ])
+            person_address_role_id = clv_person_address_role_browse.id[0]
+
         reg_state = row['reg_state']
         if reg_state is None:
             reg_state = 'draft'
@@ -1074,6 +1091,7 @@ def clv_person_import_sqlite_10(
                 'state': state,
                 'notes': row['notes'],
                 'address_id': address_id,
+                'person_address_role_id': person_address_role_id,
                 'active': row['active'],
                 'active_log': row['active_log'],
                 'history_marker_id': new_history_marker_id,
@@ -1112,6 +1130,7 @@ def clv_person_import_sqlite_10(
                 'state': state,
                 'notes': row['notes'],
                 'address_id': address_id,
+                'person_address_role_id': person_address_role_id,
                 'active': row['active'],
                 'active_log': row['active_log'],
                 'history_marker_id': new_history_marker_id,
