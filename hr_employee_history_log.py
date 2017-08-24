@@ -101,7 +101,7 @@ def hr_employee_history_log_export_sqlite_10(client, args, db_path, table_name):
 
 
 def hr_employee_history_log_import_sqlite_10(
-    client, args, db_path, table_name, address_table_name, res_users_table_name
+    client, args, db_path, table_name, hr_employee_table_name, res_users_table_name
 ):
 
     employee_history_log_model = client.model('hr.employee.history.log')
@@ -147,15 +147,13 @@ def hr_employee_history_log_import_sqlite_10(
         if row['employee_history_id']:
             cursor2.execute(
                 '''
-                SELECT code
-                FROM ''' + address_table_name + '''
+                SELECT new_id
+                FROM ''' + hr_employee_table_name + '''
                 WHERE id = ?;''',
                 (row['employee_history_id'],
                  )
             )
-            address_code = cursor2.fetchone()[0]
-            address_browse = address_model.browse([('code', '=', address_code), ])
-            employee_history_id = address_browse.id[0]
+            employee_history_id = cursor2.fetchone()[0]
 
         user_id = False
         if row['user_id']:
