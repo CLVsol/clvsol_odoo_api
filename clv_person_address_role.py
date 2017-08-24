@@ -151,3 +151,73 @@ def clv_person_address_role_import_sqlite(client, args, db_path, table_name):
 
     print()
     print('--> person_address_role_count: ', person_address_role_count)
+
+
+def clv_person_address_role_export_sqlite_10(client, args, db_path, table_name):
+
+    conn = sqlite3.connect(db_path)
+    conn.text_factory = str
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''DROP TABLE ''' + table_name + ''';''')
+    except Exception as e:
+        print('------->', e)
+    cursor.execute('''
+        CREATE TABLE ''' + table_name + ''' (
+            id INTEGER NOT NULL PRIMARY KEY,
+            name,
+            code,
+            description,
+            notes,
+            new_id INTEGER
+            );
+    ''')
+
+    # client.context = {'active_test': False}
+    myo_person_address_role = client.model('clv.person.address.role')
+    person_address_role_browse = myo_person_address_role.browse(args)
+
+    person_address_role_count = 0
+    for person_address_role in person_address_role_browse:
+        person_address_role_count += 1
+
+        print(
+            person_address_role_count, person_address_role.id, person_address_role.code,
+            person_address_role.name.encode("utf-8"), person_address_role.notes
+        )
+
+        code = None
+        if person_address_role.code:
+            code = person_address_role.code
+
+        description = None
+        if person_address_role.description:
+            description = person_address_role.description
+
+        notes = None
+        if person_address_role.notes:
+            notes = person_address_role.notes
+
+        cursor.execute('''
+                       INSERT INTO ''' + table_name + '''(
+                           id,
+                           name,
+                           code,
+                           description,
+                           notes
+                           )
+                       VALUES(?,?,?,?,?)''',
+                       (person_address_role.id,
+                        person_address_role.name,
+                        code,
+                        description,
+                        notes,
+                        )
+                       )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> person_address_role_count: ', person_address_role_count)
