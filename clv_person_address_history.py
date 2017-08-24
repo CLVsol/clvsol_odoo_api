@@ -234,6 +234,10 @@ def clv_person_address_history_export_sqlite_10(client, args, db_path, table_nam
         if person_address_history_reg.history_marker_id:
             history_marker_id = person_address_history_reg.history_marker_id.id
 
+        notes = None
+        if person_address_history_reg.notes:
+            notes = person_address_history_reg.notes
+
         cursor.execute('''
             INSERT INTO ''' + table_name + '''(
                 id,
@@ -244,9 +248,11 @@ def clv_person_address_history_export_sqlite_10(client, args, db_path, table_nam
                 address_id,
                 role_id,
                 history_marker_id,
-                active
+                notes,
+                active,
+                active_log
                 )
-            VALUES(?,?,?,?,?,?,?,?,?)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?)
             ''', (person_address_history_reg.id,
                   person_id,
                   str(person_address_history_reg.global_tag_ids.id),
@@ -255,7 +261,9 @@ def clv_person_address_history_export_sqlite_10(client, args, db_path, table_nam
                   address_id,
                   role_id,
                   history_marker_id,
+                  notes,
                   person_address_history_reg.active,
+                  person_address_history_reg.active_log,
                   )
         )
 
@@ -264,3 +272,183 @@ def clv_person_address_history_export_sqlite_10(client, args, db_path, table_nam
 
     print()
     print('--> person_address_history_count: ', person_address_history_count)
+
+
+def clv_person_address_history_import_sqlite_10(
+    client, args, db_path, table_name, global_tag_table_name, person_address_role_table_name, person_table_name,
+    address_table_name, history_marker_table_name
+):
+
+    person_address_history_model = client.model('clv.person.address.history')
+
+    history_marker_model = client.model('clv.history_marker')
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+
+    cursor = conn.cursor()
+
+    cursor2 = conn.cursor()
+
+    person_count = 0
+
+    data = cursor.execute(
+        '''
+        SELECT
+            id,
+            global_tag_ids,
+            person_id,
+            address_id,
+            role_id,
+            history_marker_id,
+            sign_in_date,
+            sign_out_date,
+            notes,
+            active,
+            active_log,
+            new_id
+        FROM ''' + table_name + ''';
+        '''
+    )
+
+    print(data)
+    print([field[0] for field in cursor.description])
+    for row in cursor:
+        person_count += 1
+
+        print(
+            person_count, row['id'], row['person_id'], row['address_id'], row['role_id']
+        )
+
+        person_id = False
+        if row['person_id']:
+
+            person_id = row['person_id']
+
+            cursor2.execute(
+                '''
+                SELECT new_id
+                FROM ''' + person_table_name + '''
+                WHERE id = ?;''',
+                (person_id,
+                 )
+            )
+            person_id = cursor2.fetchone()[0]
+
+        address_id = False
+        if row['address_id']:
+
+            address_id = row['address_id']
+
+            cursor2.execute(
+                '''
+                SELECT new_id
+                FROM ''' + address_table_name + '''
+                WHERE id = ?;''',
+                (address_id,
+                 )
+            )
+            address_id = cursor2.fetchone()[0]
+
+        role_id = False
+        if row['role_id']:
+
+            role_id = row['role_id']
+
+            cursor2.execute(
+                '''
+                SELECT new_id
+                FROM ''' + person_address_role_table_name + '''
+                WHERE id = ?;''',
+                (role_id,
+                 )
+            )
+            role_id = cursor2.fetchone()[0]
+
+        new_history_marker_id = False
+        if row['history_marker_id']:
+            cursor2.execute(
+                '''
+                SELECT name
+                FROM ''' + history_marker_table_name + '''
+                WHERE id = ?;''',
+                (row['history_marker_id'],
+                 )
+            )
+            history_marker_name = cursor2.fetchone()[0]
+            history_marker_browse = history_marker_model.browse([('name', '=', history_marker_name), ])
+            new_history_marker_id = history_marker_browse.id[0]
+
+        person_address_history_browse = person_address_history_model.browse([
+            ('person_id', '=', person_id),
+            ('sign_in_date', '=', row['sign_in_date']),
+            ('history_marker_id', '=', new_history_marker_id),
+            ('active', '=', True),
+        ])
+        if person_address_history_browse.id != []:
+            person_id = person_address_history_browse.id[0]
+
+        person_address_history_browse_2 = person_address_history_model.browse([
+            ('person_id', '=', person_id),
+            ('sign_in_date', '=', row['sign_in_date']),
+            ('history_marker_id', '=', new_history_marker_id),
+            ('active', '=', False),
+        ])
+        if person_address_history_browse_2.id != []:
+            person_address_history_browse = person_address_history_browse_2
+            person_id = person_address_history_browse_2.id[0]
+
+        if person_address_history_browse.id == []:
+
+            values = {
+                # 'global_tag_ids': row['tag_ids'],
+                'person_id': person_id,
+                'address_id': address_id,
+                'role_id': role_id,
+                'sign_in_date': row['sign_in_date'],
+                'sign_out_date': row['sign_out_date'],
+                'notes': row['notes'],
+                'active': row['active'],
+                'active_log': row['active_log'],
+                'history_marker_id': new_history_marker_id,
+            }
+            person_address_history_id = person_address_history_model.create(values).id
+
+        else:
+
+            person_address_history_id = person_address_history_browse.id[0]
+
+            values = {
+                'category_ids': [(5,), ],
+            }
+            person_address_history_model.write(person_address_history_id, values)
+
+            values = {
+                # 'global_tag_ids': row['tag_ids'],
+                # 'person_id': person_id,
+                'address_id': address_id,
+                'role_id': role_id,
+                # 'sign_in_date': row['sign_in_date'],
+                'sign_out_date': row['sign_out_date'],
+                'notes': row['notes'],
+                'active': row['active'],
+                'active_log': row['active_log'],
+                # 'history_marker_id': new_history_marker_id,
+            }
+            person_address_history_model.write(person_address_history_id, values)
+
+        cursor2.execute(
+            '''
+           UPDATE ''' + table_name + '''
+           SET new_id = ?
+           WHERE id = ?;''',
+            (person_address_history_id,
+             row['id']
+             )
+        )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> person_count: ', person_count)
