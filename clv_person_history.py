@@ -308,12 +308,12 @@ def clv_person_history_import_sqlite_10(
             (row['person_address_role_id'],
              )
         )
-        person_address_role_code = cursor2.fetchone()
-        print('>>>>>>>>>>', row['person_address_role_id'], person_address_role_code)
-        if person_address_role_code is not None:
-            person_address_role_code = person_address_role_code[0]
+        person_address_role_name = cursor2.fetchone()
+        print('>>>>>>>>>>', row['person_address_role_id'], person_address_role_name)
+        if person_address_role_name is not None:
+            person_address_role_name = person_address_role_name[0]
             clv_person_address_role_browse = \
-                person_address_role_model.browse([('code', '=', person_address_role_code), ])
+                person_address_role_model.browse([('code', '=', person_address_role_name), ])
             person_address_role_id = clv_person_address_role_browse.id[0]
 
         responsible_id = False
