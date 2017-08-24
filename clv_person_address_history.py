@@ -193,7 +193,9 @@ def clv_person_address_history_export_sqlite_10(client, args, db_path, table_nam
             address_id,
             role_id,
             history_marker_id,
+            notes,
             active,
+            active_log,
             new_id INTEGER
             );
         '''
