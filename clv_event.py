@@ -257,17 +257,18 @@ def clv_event_import_sqlite_10(
                 new_category_ids.append((4, new_category_id))
 
         new_history_marker_id = False
-        cursor2.execute(
-            '''
-            SELECT name
-            FROM ''' + history_marker_table_name + '''
-            WHERE id = ?;''',
-            (row['history_marker_id'],
-             )
-        )
-        history_marker_name = cursor2.fetchone()[0]
-        history_marker_browse = history_marker_model.browse([('name', '=', history_marker_name), ])
-        new_history_marker_id = history_marker_browse.id[0]
+        if row['history_marker_id'] is not None:
+            cursor2.execute(
+                '''
+                SELECT name
+                FROM ''' + history_marker_table_name + '''
+                WHERE id = ?;''',
+                (row['history_marker_id'],
+                 )
+            )
+            history_marker_name = cursor2.fetchone()[0]
+            history_marker_browse = history_marker_model.browse([('name', '=', history_marker_name), ])
+            new_history_marker_id = history_marker_browse.id[0]
 
         employee_id = False
         cursor2.execute(
