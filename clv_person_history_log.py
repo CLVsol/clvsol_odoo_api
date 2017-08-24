@@ -101,7 +101,7 @@ def clv_person_history_log_export_sqlite_10(client, args, db_path, table_name):
 
 
 def clv_person_history_log_import_sqlite_10(
-    client, args, db_path, table_name, person_table_name, res_users_table_name
+    client, args, db_path, table_name, person_history_table_name, res_users_table_name
 ):
 
     person_history_log_model = client.model('clv.person.history.log')
@@ -147,15 +147,13 @@ def clv_person_history_log_import_sqlite_10(
         if row['person_history_id']:
             cursor2.execute(
                 '''
-                SELECT code
-                FROM ''' + person_table_name + '''
+                SELECT new_id
+                FROM ''' + person_history_table_name + '''
                 WHERE id = ?;''',
                 (row['person_history_id'],
                  )
             )
-            person_code = cursor2.fetchone()[0]
-            person_browse = person_model.browse([('code', '=', person_code), ])
-            person_history_id = person_browse.id[0]
+            person_history_id = cursor2.fetchone()[0]
 
         user_id = False
         if row['user_id']:
