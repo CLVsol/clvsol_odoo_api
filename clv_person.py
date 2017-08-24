@@ -1031,7 +1031,7 @@ def clv_person_import_sqlite_10(
              )
         )
         person_address_role_name = cursor2.fetchone()
-        if person_address_role_code is not None:
+        if person_address_role_name is not None:
             person_address_role_name = person_address_role_name[0]
             clv_person_address_role_browse = \
                 person_address_role_model.browse([('code', '=', person_address_role_name), ])
