@@ -416,3 +416,131 @@ def clv_document_import_sqlite(
     print()
     print('--> document_count: ', document_count)
     print('--> document_count_2: ', document_count_2)
+
+
+def clv_document_export_sqlite_10(client, args, db_path, table_name):
+
+    conn = sqlite3.connect(db_path)
+    conn.text_factory = str
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''DROP TABLE ''' + table_name + ''';''')
+    except Exception as e:
+        print('------->', e)
+    cursor.execute(
+        '''
+        CREATE TABLE ''' + table_name + ''' (
+            id INTEGER NOT NULL PRIMARY KEY,
+            global_tag_ids,
+            category_ids,
+            name,
+            code,
+            date_requested,
+            date_document,
+            date_foreseen,
+            date_deadline,
+            reg_state,
+            state,
+            notes,
+            person_id,
+            address_id,
+            active,
+            active_log,
+            base_document_id,
+            survey_id,
+            survey_user_input_id,
+            base_survey_user_input_id,
+            new_id INTEGER
+            );
+        '''
+    )
+
+    # client.context = {'active_test': False}
+    document_model = client.model('clv.document')
+    document_browse = document_model.browse(args)
+
+    document_count = 0
+    for document_reg in document_browse:
+        document_count += 1
+
+        print(document_count, document_reg.id, document_reg.code, document_reg.name.encode("utf-8"))
+
+        notes = None
+        if document_reg.notes:
+            notes = document_reg.notes
+
+        base_document_id = None
+        if document_reg.base_document_id:
+            base_document_id = document_reg.base_document_id.id
+
+        survey_id = None
+        if document_reg.survey_id:
+            survey_id = document_reg.survey_id.id
+
+        survey_user_input_id = None
+        if document_reg.survey_user_input_id:
+            survey_user_input_id = document_reg.survey_user_input_id.id
+
+        base_survey_user_input_id = None
+        if document_reg.base_survey_user_input_id:
+            base_survey_user_input_id = document_reg.base_survey_user_input_id.id
+
+        person_id = None
+        if document_reg.person_id:
+            person_id = document_reg.person_id.id
+
+        address_id = None
+        if document_reg.address_id:
+            address_id = document_reg.address_id.id
+
+        cursor.execute('''
+            INSERT INTO ''' + table_name + '''(
+                id,
+                global_tag_ids,
+                category_ids,
+                name,
+                code,
+                date_requested,
+                date_document,
+                date_foreseen,
+                date_deadline,
+                state,
+                notes,
+                person_id,
+                address_id,
+                active,
+                active_log,
+                base_document_id,
+                survey_id,
+                survey_user_input_id,
+                base_survey_user_input_id
+                )
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            ''', (document_reg.id,
+                  str(document_reg.global_tag_ids.id),
+                  str(document_reg.category_ids.id),
+                  document_reg.name,
+                  document_reg.code,
+                  document_reg.date_requested,
+                  document_reg.date_document,
+                  document_reg.date_foreseen,
+                  document_reg.date_deadline,
+                  document_reg.state,
+                  notes,
+                  person_id,
+                  address_id,
+                  document_reg.active,
+                  document_reg.active_log,
+                  base_document_id,
+                  survey_id,
+                  survey_user_input_id,
+                  base_survey_user_input_id,
+                  )
+        )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> document_count: ', document_count)
