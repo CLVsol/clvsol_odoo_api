@@ -193,3 +193,79 @@ def clv_document_log_import_sqlite(client, args, db_path, table_name, document_t
 
     print()
     print('--> document_log_count: ', document_log_count)
+
+
+def clv_document_log_export_sqlite_10(client, args, db_path, table_name):
+
+    conn = sqlite3.connect(db_path)
+    conn.text_factory = str
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''DROP TABLE ''' + table_name + ''';''')
+    except Exception as e:
+        print('------->', e)
+    cursor.execute('''
+        CREATE TABLE ''' + table_name + ''' (
+            id INTEGER NOT NULL PRIMARY KEY,
+            document_id,
+            user_id,
+            date_log,
+            values_,
+            action,
+            notes,
+            new_id INTEGER
+            );
+    ''')
+
+    # client.context = {'active_test': False}
+    myo_document_log = client.model('clv.document.log')
+    document_log_browse = myo_document_log.browse(args)
+
+    document_log_count = 0
+    for document_log in document_log_browse:
+        document_log_count += 1
+
+        print(
+            document_log_count, document_log.id, document_log.values,
+            document_log.date_log, document_log.notes
+        )
+
+        document_id = None
+        if document_log.document_id:
+            document_id = document_log.document_id.id
+
+        user_id = None
+        if document_log.user_id:
+            user_id = document_log.user_id.id
+
+        notes = None
+        if document_log.notes:
+            notes = document_log.notes
+
+        cursor.execute('''
+                       INSERT INTO ''' + table_name + '''(
+                           id,
+                           document_id,
+                           user_id,
+                           date_log,
+                           values_,
+                           action,
+                           notes
+                           )
+                       VALUES(?,?,?,?,?,?,?)''',
+                       (document_log.id,
+                        document_id,
+                        user_id,
+                        document_log.date_log,
+                        document_log.values,
+                        document_log.action,
+                        notes
+                        )
+                       )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> document_log_count: ', document_log_count)
