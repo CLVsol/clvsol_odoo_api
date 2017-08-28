@@ -261,7 +261,7 @@ def clv_address_history_import_sqlite_10(
 
             values = {
                 'address_id': address_id,
-                'category_ids': category_ids,
+                'category_ids': new_category_ids,
                 'sign_in_date': row['sign_in_date'],
                 'sign_out_date': row['sign_out_date'],
                 'reg_state': reg_state,
@@ -284,7 +284,7 @@ def clv_address_history_import_sqlite_10(
 
             values = {
                 # 'address_id': address_id,
-                'category_ids': category_ids,
+                'category_ids': new_category_ids,
                 # 'sign_in_date': row['sign_in_date'],
                 'sign_out_date': row['sign_out_date'],
                 'reg_state': reg_state,
