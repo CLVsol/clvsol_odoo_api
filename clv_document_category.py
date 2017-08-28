@@ -194,3 +194,73 @@ def clv_document_category_import_sqlite(client, args, db_path, table_name):
     print()
     print('--> document_category_count: ', document_category_count)
     print('--> document_category_count_2: ', document_category_count_2)
+
+
+def clv_document_category_export_sqlite_10(client, args, db_path, table_name):
+
+    conn = sqlite3.connect(db_path)
+    conn.text_factory = str
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''DROP TABLE ''' + table_name + ''';''')
+    except Exception as e:
+        print('------->', e)
+    cursor.execute('''
+        CREATE TABLE ''' + table_name + ''' (
+            id INTEGER NOT NULL PRIMARY KEY,
+            parent_id,
+            name,
+            code,
+            description,
+            notes,
+            color,
+            new_id INTEGER
+            );
+    ''')
+
+    # client.context = {'active_test': False}
+    myo_document_category = client.model('clv.document.category')
+    document_category_browse = myo_document_category.browse(args)
+
+    document_category_count = 0
+    for document_category in document_category_browse:
+        document_category_count += 1
+
+        print(
+            document_category_count, document_category.id, document_category.code,
+            document_category.name.encode("utf-8"), document_category.notes
+        )
+
+        parent_id = None
+        if document_category.parent_id:
+            parent_id = document_category.parent_id.id
+
+        notes = None
+        if document_category.notes:
+            notes = document_category.notes
+
+        cursor.execute('''
+                       INSERT INTO ''' + table_name + '''(
+                           id,
+                           parent_id,
+                           name,
+                           code,
+                           description,
+                           notes
+                           )
+                       VALUES(?,?,?,?,?,?)''',
+                       (document_category.id,
+                        parent_id,
+                        document_category.name,
+                        document_category.code,
+                        document_category.description,
+                        notes
+                        )
+                       )
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> document_category_count: ', document_category_count)
