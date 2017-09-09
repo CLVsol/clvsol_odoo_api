@@ -318,8 +318,17 @@ def clv_lab_test_result_import_sqlite(
                             ('code', '=', unit_code),
                         ])[0]
 
+                    code = row3['code']
+                    if code != 0:
+                        code = code.replace('EAN-', 'EAN17-')
+                        code = code.replace('ECP-', 'ECP17-')
+                        code = code.replace('EDH-', 'EDH17-')
+                        code = code.replace('EEV-', 'EEV17-')
+                        code = code.replace('EUR-', 'EUR17-')
+
                     values = {
-                        'code': row3['code'],
+                        # 'code': row3['code'],
+                        'code': code,
                         'name': row3['name'],
                         'result': row3['result'],
                         'unit_id': new_unit_id,
@@ -329,6 +338,7 @@ def clv_lab_test_result_import_sqlite(
                         # 'lab_test_result_id': new_lab_test_result_id,
                         'active': row3['active'],
                     }
+                    print('>>>>>>>>>>', values)
                     new_criterion_id = lab_test_criterion_model.create(values).id
                     new_criterion_ids.append((4, new_criterion_id))
 
