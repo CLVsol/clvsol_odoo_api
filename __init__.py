@@ -63,4 +63,6 @@ from clv_person_category import *
 from clv_person_history import *
 from clv_person_history_log import *
 from clv_person_log import *
+from clv_person_mng import *
+from clv_person_mng_log import *
 from clv_survey import *
