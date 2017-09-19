@@ -33,6 +33,7 @@ from res_country import *
 from res_country_state import *
 from res_partner import *
 from res_users import *
+from survey_survey import *
 
 from clv_address import *
 from clv_address_category import *
