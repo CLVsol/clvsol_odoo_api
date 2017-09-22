@@ -64,6 +64,9 @@ def clv_person_mng_export_sqlite_10(client, args, db_path, table_name):
             address_id,
             active,
             active_log,
+            action_person,
+            action_address,
+            action_person_address,
             new_id INTEGER
             );
         '''
@@ -186,9 +189,12 @@ def clv_person_mng_export_sqlite_10(client, args, db_path, table_name):
                 person_id,
                 address_id,
                 active,
-                active_log
+                active_log,
+                action_person,
+                action_address,
+                action_person_address
                 )
-            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             ''', (person_mng_reg.id,
                   str(person_mng_reg.global_tag_ids.id),
                   person_mng_reg.name,
@@ -215,6 +221,9 @@ def clv_person_mng_export_sqlite_10(client, args, db_path, table_name):
                   address_id,
                   person_mng_reg.active,
                   person_mng_reg.active_log,
+                  person_mng_reg.action_person,
+                  person_mng_reg.action_address,
+                  person_mng_reg.action_person_address,
                   )
         )
 
@@ -275,6 +284,10 @@ def clv_person_mng_import_sqlite_10(
             address_id,
             active,
             active_log,
+            action_person,
+            action_address,
+            action_person_address,
+            new_id INTEGER
             new_id
         FROM ''' + table_name + ''';
         '''
@@ -464,6 +477,9 @@ def clv_person_mng_import_sqlite_10(
                 'address_id': address_id,
                 'active': row['active'],
                 'active_log': row['active_log'],
+                'active_log': row['action_person'],
+                'active_log': row['action_address'],
+                'active_log': row['action_person_address'],
             }
             person = person_mng_model.create(values)
             person_mng_id = person.id
@@ -503,6 +519,10 @@ def clv_person_mng_import_sqlite_10(
                 'address_id': address_id,
                 'active': row['active'],
                 'active_log': row['active_log'],
+                'active_log': row['active_log'],
+                'active_log': row['action_person'],
+                'active_log': row['action_address'],
+                'active_log': row['action_person_address'],
             }
             person_mng_model.write(person_mng_id, values)
 
