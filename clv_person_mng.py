@@ -287,7 +287,6 @@ def clv_person_mng_import_sqlite_10(
             action_person,
             action_address,
             action_person_address,
-            new_id INTEGER
             new_id
         FROM ''' + table_name + ''';
         '''
@@ -477,9 +476,9 @@ def clv_person_mng_import_sqlite_10(
                 'address_id': address_id,
                 'active': row['active'],
                 'active_log': row['active_log'],
-                'active_log': row['action_person'],
-                'active_log': row['action_address'],
-                'active_log': row['action_person_address'],
+                'action_person': row['action_person'],
+                'action_address': row['action_address'],
+                'action_person_address': row['action_person_address'],
             }
             person = person_mng_model.create(values)
             person_mng_id = person.id
@@ -495,7 +494,7 @@ def clv_person_mng_import_sqlite_10(
 
             values = {
                 'global_tag_ids': new_global_tag_ids,
-                'name': row['name'],
+                # 'name': row['name'],
                 'gender': row['gender'],
                 'birthday': row['birthday'],
                 'estimated_age': row['estimated_age'],
@@ -519,10 +518,9 @@ def clv_person_mng_import_sqlite_10(
                 'address_id': address_id,
                 'active': row['active'],
                 'active_log': row['active_log'],
-                'active_log': row['active_log'],
-                'active_log': row['action_person'],
-                'active_log': row['action_address'],
-                'active_log': row['action_person_address'],
+                'action_person': row['action_person'],
+                'action_address': row['action_address'],
+                'action_person_address': row['action_person_address'],
             }
             person_mng_model.write(person_mng_id, values)
 
