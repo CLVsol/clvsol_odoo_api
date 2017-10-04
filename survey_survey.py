@@ -148,14 +148,15 @@ def survey_survey_import_sqlite_10(
 
         if survey_survey_browse.id == []:
 
-            values = {
-                'title': row['title'],
-                'description': row['description'],
-                'code': row['code'],
-                'history_marker_id': history_marker_id,
-            }
-            survey_survey = survey_survey_model.create(values)
-            survey_id = survey_survey.id
+            # values = {
+            #     'title': row['title'],
+            #     'description': row['description'],
+            #     'code': row['code'],
+            #     'history_marker_id': history_marker_id,
+            # }
+            # survey_survey = survey_survey_model.create(values)
+            # survey_id = survey_survey.id
+            survey_id = False
 
         else:
 
@@ -169,15 +170,16 @@ def survey_survey_import_sqlite_10(
             }
             survey_survey_model.write(survey_id, values)
 
-        cursor2.execute(
-            '''
-           UPDATE ''' + table_name + '''
-           SET new_id = ?
-           WHERE id = ?;''',
-            (survey_id,
-             row['id']
-             )
-        )
+        if survey_id is not False:
+            cursor2.execute(
+                '''
+               UPDATE ''' + table_name + '''
+               SET new_id = ?
+               WHERE id = ?;''',
+                (survey_id,
+                 row['id']
+                 )
+            )
 
     conn.commit()
 
