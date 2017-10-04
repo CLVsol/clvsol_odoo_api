@@ -242,17 +242,18 @@ def clv_lab_test_type_import_sqlite_10(
 
         if lab_test_type_browse.id == []:
 
-            values = {
-                'name': row['name'],
-                'code': row['code'],
-                'history_marker_id': history_marker_id,
-                'survey_id': survey_id,
-                'date_inclusion': row['date_inclusion'],
-                'active': row['active'],
-                'active_log': row['active_log'],
-            }
-            survey_survey = lab_test_type_model.create(values)
-            lab_test_type_id = survey_survey.id
+            # values = {
+            #     'name': row['name'],
+            #     'code': row['code'],
+            #     'history_marker_id': history_marker_id,
+            #     'survey_id': survey_id,
+            #     'date_inclusion': row['date_inclusion'],
+            #     'active': row['active'],
+            #     'active_log': row['active_log'],
+            # }
+            # survey_survey = lab_test_type_model.create(values)
+            # lab_test_type_id = survey_survey.id
+            lab_test_type_id = False
 
         else:
 
@@ -269,15 +270,16 @@ def clv_lab_test_type_import_sqlite_10(
             }
             lab_test_type_model.write(lab_test_type_id, values)
 
-        cursor2.execute(
-            '''
-           UPDATE ''' + table_name + '''
-           SET new_id = ?
-           WHERE id = ?;''',
-            (lab_test_type_id,
-             row['id']
-             )
-        )
+        if lab_test_type_id is not False:
+            cursor2.execute(
+                '''
+               UPDATE ''' + table_name + '''
+               SET new_id = ?
+               WHERE id = ?;''',
+                (lab_test_type_id,
+                 row['id']
+                 )
+            )
 
     conn.commit()
 
