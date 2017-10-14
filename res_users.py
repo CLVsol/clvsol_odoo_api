@@ -422,11 +422,11 @@ def res_users_import_sqlite_10(client, args, db_path, table_name, res_partner_ta
 
         print('>>>>>', res_users_browse.id, res_users_id)
 
-        groups_id = row['groups_id'].split(',')
-        new_groups_id = []
-        for x in range(0, len(groups_id)):
-            group_id = int(re.sub('[^0-9]', '', groups_id[x]))
-            new_groups_id.append((4, group_id))
+        # groups_id = row['groups_id'].split(',')
+        # new_groups_id = []
+        # for x in range(0, len(groups_id)):
+        #     group_id = int(re.sub('[^0-9]', '', groups_id[x]))
+        #     new_groups_id.append((4, group_id))
 
         if res_users_browse.id == []:
 
@@ -454,15 +454,15 @@ def res_users_import_sqlite_10(client, args, db_path, table_name, res_partner_ta
             }
             res_users_id = res_users_model.create(values).id
 
-            values = {
-                'groups_id': [(6, 0, [])],
-            }
-            res_users_model.write(res_users_id, values)
+            # values = {
+            #     'groups_id': [(6, 0, [])],
+            # }
+            # res_users_model.write(res_users_id, values)
 
-            values = {
-                'groups_id': new_groups_id,
-            }
-            res_users_model.write(res_users_id, values)
+            # values = {
+            #     'groups_id': new_groups_id,
+            # }
+            # res_users_model.write(res_users_id, values)
 
         else:
 
@@ -478,15 +478,15 @@ def res_users_import_sqlite_10(client, args, db_path, table_name, res_partner_ta
                     }
                     res_users_model.write(res_users_id, values)
 
-                    values = {
-                        'groups_id': [(6, 0, [])],
-                    }
-                    res_users_model.write(res_users_id, values)
+                    # values = {
+                    #     'groups_id': [(6, 0, [])],
+                    # }
+                    # res_users_model.write(res_users_id, values)
 
-                    values = {
-                        'groups_id': new_groups_id,
-                    }
-                    res_users_model.write(res_users_id, values)
+                    # values = {
+                    #     'groups_id': new_groups_id,
+                    # }
+                    # res_users_model.write(res_users_id, values)
 
         cursor2.execute(
             '''
