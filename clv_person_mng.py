@@ -541,3 +541,260 @@ def clv_person_mng_import_sqlite_10(
 
     print()
     print('--> person_mng_count: ', person_mng_count)
+
+
+def clv_person_mng_import_sqlite_10_renew(
+        client, args, db_path, table_name, global_tag_table_name, person_table_name, address_table_name,
+        res_country_state_table_name, res_country_table_name, l10n_br_base_city_table_name
+):
+
+    person_mng_model = client.model('clv.person.mng')
+    global_tag_model = client.model('clv.global_tag')
+    address_model = client.model('clv.address')
+    person_model = client.model('clv.person')
+    res_country_state_model = client.model('res.country.state')
+    res_country_model = client.model('res.country')
+    l10n_br_base_city_model = client.model('l10n_br_base.city')
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+
+    cursor = conn.cursor()
+    cursor2 = conn.cursor()
+
+    person_mng_count = 0
+
+    data = cursor.execute(
+        '''
+        SELECT
+            id,
+            global_tag_ids,
+            name,
+            gender,
+            birthday,
+            estimated_age,
+            responsible_name,
+            responsible_id,
+            caregiver_name,
+            caregiver_id,
+            state,
+            notes,
+            street,
+            street2,
+            zip,
+            state_id,
+            country_id,
+            phone,
+            mobile,
+            l10n_br_city_id,
+            district,
+            number,
+            person_id,
+            address_id,
+            active,
+            active_log,
+            action_person,
+            action_address,
+            action_person_address,
+            new_id
+        FROM ''' + table_name + ''';
+        '''
+    )
+
+    print(data)
+    print([field[0] for field in cursor.description])
+    for row in cursor:
+        person_mng_count += 1
+
+        print(person_mng_count, row['id'], row['name'].encode('utf-8'))
+
+        new_global_tag_ids = False
+        if row['global_tag_ids'] != '[]':
+
+            global_tag_ids = row['global_tag_ids'].split(',')
+            new_global_tag_ids = []
+            for x in range(0, len(global_tag_ids)):
+                tag_id = int(re.sub('[^0-9]', '', global_tag_ids[x]))
+                cursor2.execute(
+                    '''
+                    SELECT name
+                    FROM ''' + global_tag_table_name + '''
+                    WHERE id = ?;''',
+                    (tag_id,
+                     )
+                )
+                global_tag_name = cursor2.fetchone()
+                if global_tag_name is not None:
+                    global_tag_name = global_tag_name[0]
+                    global_tag_browse = global_tag_model.browse([('name', '=', global_tag_name), ])
+                    new_global_tag_id = global_tag_browse.id[0]
+
+                    new_global_tag_ids.append((4, new_global_tag_id))
+
+        responsible_id = False
+        if row['responsible_id']:
+            cursor2.execute(
+                '''
+                SELECT code
+                FROM ''' + person_table_name + '''
+                WHERE id = ?;''',
+                (row['responsible_id'],
+                 )
+            )
+            person_code = cursor2.fetchone()
+            if person_code is not None:
+                person_code = person_code[0]
+                person_browse = person_model.browse([('code', '=', person_code), ])
+                responsible_id = person_browse.id[0]
+
+        caregiver_id = False
+        if row['caregiver_id']:
+            cursor2.execute(
+                '''
+                SELECT code
+                FROM ''' + person_table_name + '''
+                WHERE id = ?;''',
+                (row['caregiver_id'],
+                 )
+            )
+            person_code = cursor2.fetchone()
+            if person_code is not None:
+                person_code = person_code[0]
+                person_browse = person_model.browse([('code', '=', person_code), ])
+                caregiver_id = person_browse.id[0]
+
+        state_id = False
+        if row['state_id']:
+            cursor2.execute(
+                '''
+                SELECT name
+                FROM ''' + res_country_state_table_name + '''
+                WHERE id = ?;''',
+                (row['state_id'],
+                 )
+            )
+            res_country_state_name = cursor2.fetchone()
+            if res_country_state_name is not None:
+                res_country_state_name = res_country_state_name[0]
+                res_country_state_browse = res_country_state_model.browse([('name', '=', res_country_state_name), ])
+                state_id = res_country_state_browse.id[0]
+
+        country_id = False
+        if row['country_id']:
+            cursor2.execute(
+                '''
+                SELECT name
+                FROM ''' + res_country_table_name + '''
+                WHERE id = ?;''',
+                (row['country_id'],
+                 )
+            )
+            res_country_name = cursor2.fetchone()
+            if res_country_name is not None:
+                res_country_name = res_country_name[0]
+                res_country_browse = res_country_model.browse([('name', '=', res_country_name), ])
+                country_id = res_country_browse.id[0]
+
+        l10n_br_city_id = False
+        if row['l10n_br_city_id']:
+            cursor2.execute(
+                '''
+                SELECT name
+                FROM ''' + l10n_br_base_city_table_name + '''
+                WHERE id = ?;''',
+                (row['l10n_br_city_id'],
+                 )
+            )
+            l10n_br_base_city_name = cursor2.fetchone()
+            if l10n_br_base_city_name is not None:
+                l10n_br_base_city_name = l10n_br_base_city_name[0]
+                l10n_br_base_city_browse = l10n_br_base_city_model.browse([('name', '=', l10n_br_base_city_name), ])
+                l10n_br_city_id = l10n_br_base_city_browse.id[0]
+
+        person_id = False
+        person_id = False
+        if row['person_id']:
+            cursor2.execute(
+                '''
+                SELECT code
+                FROM ''' + person_table_name + '''
+                WHERE id = ?;''',
+                (row['person_id'],
+                 )
+            )
+            person_code = cursor2.fetchone()
+            if person_code is not None:
+                person_code = person_code[0]
+                person_browse = person_model.browse([('code', '=', person_code), ])
+                person_id = person_browse.id[0]
+
+        address_id = False
+        if row['address_id']:
+            cursor2.execute(
+                '''
+                SELECT code
+                FROM ''' + address_table_name + '''
+                WHERE id = ?;''',
+                (row['address_id'],
+                 )
+            )
+            address_code = cursor2.fetchone()
+            if address_code is not None:
+                address_code = address_code[0]
+                address_browse = address_model.browse([('code', '=', address_code), ])
+                address_id = address_browse.id[0]
+
+        state = row['state']
+        if state is None:
+            state = 'draft'
+
+        values = {
+            'global_tag_ids': new_global_tag_ids,
+            'name': row['name'],
+            'gender': row['gender'],
+            'birthday': row['birthday'],
+            'estimated_age': row['estimated_age'],
+            'responsible_name': row['responsible_name'],
+            'responsible_id': responsible_id,
+            'caregiver_name': row['caregiver_name'],
+            'caregiver_id': caregiver_id,
+            'state': state,
+            'notes': row['notes'],
+            'street': row['street'],
+            'street2': row['street2'],
+            'zip': row['zip'],
+            'state_id': state_id,
+            'country_id': country_id,
+            'phone': row['phone'],
+            'mobile': row['mobile'],
+            'l10n_br_city_id': l10n_br_city_id,
+            'district': row['district'],
+            'number': row['number'],
+            'person_id': person_id,
+            'address_id': address_id,
+            'active': row['active'],
+            'active_log': row['active_log'],
+            'action_person': row['action_person'],
+            'action_address': row['action_address'],
+            'action_person_address': row['action_person_address'],
+        }
+        person = person_mng_model.create(values)
+        person_mng_id = person.id
+
+        cursor2.execute(
+            '''
+           UPDATE ''' + table_name + '''
+           SET new_id = ?
+           WHERE id = ?;''',
+            (person_mng_id,
+             row['id']
+             )
+        )
+
+    conn.commit()
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print('--> person_mng_count: ', person_mng_count)
