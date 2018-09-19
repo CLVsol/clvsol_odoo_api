@@ -383,6 +383,8 @@ def clv_person_mng_import_sqlite_10(
             res_country_name = cursor2.fetchone()
             if res_country_name is not None:
                 res_country_name = res_country_name[0]
+                if res_country_name == 'Brasil':
+                    res_country_name = 'Brazil'
                 res_country_browse = res_country_model.browse([('name', '=', res_country_name), ])
                 country_id = res_country_browse.id[0]
 
