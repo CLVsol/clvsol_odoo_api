@@ -123,7 +123,7 @@ def clv_person_mng_log_import_sqlite_10(
             person_mng_id,
             user_id,
             date_log,
-            values_,
+            "values",
             action,
             notes,
             new_id
@@ -140,7 +140,7 @@ def clv_person_mng_log_import_sqlite_10(
 
         print(
             person_mng_log_count, row['id'], row['person_mng_id'], row['user_id'], row['date_log'],
-            row['values_'], row['action'], row['notes']
+            row['values'], row['action'], row['notes']
         )
 
         person_mng_id = False
@@ -175,7 +175,7 @@ def clv_person_mng_log_import_sqlite_10(
             'person_mng_id': person_mng_id,
             'user_id': user_id,
             'date_log': row['date_log'],
-            'values': row['values_'],
+            'values': row['values'],
             'action': row['action'],
             'notes': row['notes'],
         }
